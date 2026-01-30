@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, Settings, HelpCircle, Menu } from "lucide-react";
+import { HelpCircle, Menu, Search, Settings } from "lucide-react";
+import AuthButton from "./AuthButton";
 
 interface HeaderProps {
     onSearch: (query: string) => void;
@@ -36,9 +37,7 @@ export default function Header({ onSearch }: HeaderProps) {
                 <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
                     <Settings className="w-6 h-6" />
                 </button>
-                <div className="ml-2 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:ring-2 hover:ring-gray-300">
-                    U
-                </div>
+                <AuthButton />
             </div>
         </header>
     );

@@ -93,37 +93,11 @@ export default function ArticleContent({ slug }: { slug: string }) {
 
     return (
         <>
-            {/* Dynamic Meta Tags */}
-            <head>
-                <title>{document.title} | My Blog</title>
-                <meta name="description" content={description} />
-                
-                {/* Open Graph */}
-                <meta property="og:type" content="article" />
-                <meta property="og:title" content={document.title} />
-                <meta property="og:description" content={description} />
-                <meta property="og:url" content={`${baseUrl}/articles/${slug}`} />
-                <meta property="og:site_name" content="My Blog" />
-                {document.coverImageUrl && <meta property="og:image" content={document.coverImageUrl} />}
-                <meta property="og:image:width" content="1200" />
-                <meta property="og:image:height" content="630" />
-                <meta property="article:published_time" content={publicationDate.toISOString()} />
-                
-                {/* Twitter Card */}
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={document.title} />
-                <meta name="twitter:description" content={description} />
-                {document.coverImageUrl && <meta name="twitter:image" content={document.coverImageUrl} />}
-                
-                {/* Canonical */}
-                <link rel="canonical" href={`${baseUrl}/articles/${slug}`} />
-                
-                {/* JSON-LD Structured Data */}
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-                />
-            </head>
+            {/* JSON-LD Structured Data - Valid in body */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+            />
 
         <article className="min-h-screen bg-white pb-20">
              {/* Navigation Overlay */}
@@ -146,10 +120,10 @@ export default function ArticleContent({ slug }: { slug: string }) {
                 </h1>
             </CoverImage>
 
-            <div className="max-w-4xl mx-auto px-6 mt-12">
+            <div className="max-w-5xl mx-auto px-6 mt-12">
                 {/* Header Section */}
                 <header className="mb-16">
-                    <div className="flex items-center gap-3 text-gray-500 text-sm mb-4">
+                    <div className="flex items-center gap-3 text-gray-500 text-sm ">
                         <Calendar className="w-4 h-4" />
                         <time dateTime={publicationDate.toISOString()} className="font-medium">
                             {formattedDate}
@@ -163,9 +137,9 @@ export default function ArticleContent({ slug }: { slug: string }) {
                 <article className="
                     prose prose-xl max-w-none
                     prose-headings:text-gray-900 prose-headings:font-bold prose-headings:tracking-tight
-                    prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-12 prose-h1:leading-tight
-                    prose-h2:text-3xl prose-h2:mb-5 prose-h2:mt-12 prose-h2:leading-snug
-                    prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-10 prose-h3:leading-snug
+                    prose-h1:text-4xl prose-h1:mb-4 prose-h1:mt-10 prose-h1:leading-tight
+                    prose-h2:text-3xl prose-h2:mb-3 prose-h2:mt-10 prose-h2:leading-snug
+                    prose-h3:text-2xl prose-h3:mb-2 prose-h3:mt-8 prose-h3:leading-snug
                     prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 prose-p:text-lg
                     prose-ul:my-6 prose-ul:space-y-2
                     prose-ol:my-6 prose-ol:space-y-2
