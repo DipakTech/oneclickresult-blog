@@ -1,5 +1,3 @@
-"use client";
-
 import ArticleGrid from "../../components/ArticleGrid";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
