@@ -5,9 +5,58 @@ import ConvexClientProvider from "./ConvexClientProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
+
+
 export const metadata: Metadata = {
-  title: "File Storage App",
-  description: "A Google Drive clone built with Convex and Next.js",
+  title: {
+    default: 'My Blog - Insightful Articles on Development & Technology',
+    template: '%s | My Blog',
+  },
+  description: 'A modern blog platform featuring articles on software development, technology trends, and developer insights.',
+  keywords: ['blog', 'development', 'technology', 'programming', 'software engineering'],
+  authors: [{ name: 'Blog Author' }],
+  creator: 'Blog Author',
+  publisher: 'My Blog',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: '/',
+    siteName: 'My Blog',
+    title: 'My Blog - Insightful Articles on Development & Technology',
+    description: 'A modern blog platform featuring articles on software development, technology trends, and developer insights.',
+    images: [
+      {
+        url: '/og-default.png',
+        width: 1200,
+        height: 630,
+        alt: 'My Blog',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'My Blog - Insightful Articles on Development & Technology',
+    description: 'A modern blog platform featuring articles on software development, technology trends, and developer insights.',
+    creator: '@yourtwitterhandle',
+    images: ['/og-default.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add your verification codes when ready
+    // google: 'your-google-site-verification',
+    // yandex: 'your-yandex-verification',
+  },
 };
 
 export default function RootLayout({
