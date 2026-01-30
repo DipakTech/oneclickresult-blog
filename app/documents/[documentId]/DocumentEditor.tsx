@@ -5,6 +5,8 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { Eye } from "lucide-react";
 
 const Editor = dynamic(() => import("../../../components/Editor"), { ssr: false });
 
@@ -15,6 +17,7 @@ interface DocumentEditorProps {
 export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     const document = useQuery(api.documents.getDocument, { id: documentId });
     const updateDocument = useMutation(api.documents.updateDocument);
+    const router = useRouter();
 
     const [title, setTitle] = useState("");
     const [hasSynced, setHasSynced] = useState(false);
@@ -74,12 +77,22 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
         <div className="min-h-screen bg-white">
             <div className="p-8 max-w-4xl mx-auto">
                 <div className="mb-8">
-                    <input
-                        value={title}
-                        onChange={handleTitleChange}
-                        className="text-4xl font-bold text-gray-900 mb-4 w-full border-none focus:outline-none focus:ring-0 bg-transparent placeholder-gray-400"
-                        placeholder="Untitled"
-                    />
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                        <input
+                            value={title}
+                            onChange={handleTitleChange}
+                            className="text-4xl font-bold text-gray-900 w-full border-none focus:outline-none focus:ring-0 bg-transparent placeholder-gray-400"
+                            placeholder="Untitled"
+                        />
+                        <button
+                            onClick={() => router.push(`/documents/${documentId}/view`)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
+                            title="Preview as blog post"
+                        >
+                            <Eye className="w-4 h-4" />
+                            Preview
+                        </button>
+                    </div>
                     {document.coverImageUrl && (
                         <div className="relative w-full h-64 mb-6">
                             <img
