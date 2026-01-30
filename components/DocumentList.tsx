@@ -2,15 +2,22 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import ConfirmDialog from "./ConfirmDialog";
+import { Id } from "../convex/_generated/dataModel";
+import { getRandomGradient } from "../lib/gradients";
 
 export default function DocumentList() {
     const documents = useQuery(api.documents.getDocuments);
     const createDocument = useMutation(api.documents.createDocument);
+    const deleteDocument = useMutation(api.documents.deleteDocument);
     const router = useRouter();
     const [isCreating, setIsCreating] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [documentToDelete, setDocumentToDelete] = useState<Id<"documents"> | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleCreateDocument = async () => {
         if (isCreating) return;
@@ -23,6 +30,27 @@ export default function DocumentList() {
             alert("Failed to create document. Please try again.");
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    const handleDeleteClick = (e: React.MouseEvent, documentId: Id<"documents">) => {
+        e.stopPropagation();
+        setDocumentToDelete(documentId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!documentToDelete) return;
+        setIsDeleting(true);
+        try {
+            await deleteDocument({ id: documentToDelete });
+            setDeleteDialogOpen(false);
+            setDocumentToDelete(null);
+        } catch (error) {
+            console.error("Failed to delete document:", error);
+            alert("Failed to delete document. Please try again.");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -64,28 +92,58 @@ export default function DocumentList() {
                 </button>
 
                 {/* Document Cards */}
-                {documents?.map((doc) => (
-                    <div
-                        key={doc._id}
-                        onClick={() => router.push(`/documents/${doc._id}`)}
-                        className="relative group bg-white border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer flex flex-col h-40 justify-between"
-                    >
-                        <div className="flex items-start justify-between">
-                            <div className="p-2 bg-orange-100 rounded-lg">
-                                <FileText className="w-6 h-6 text-orange-600" />
+                {documents?.map((doc) => {
+                    const gradient = getRandomGradient(doc._id);
+                    return (
+                        <div
+                            key={doc._id}
+                            onClick={() => router.push(`/documents/${doc._id}`)}
+                            className="relative group bg-white border rounded-lg hover:shadow-md transition-all cursor-pointer flex flex-col h-56 justify-between overflow-hidden"
+                        >
+                            {/* Thumbnail Area */}
+                            <div className={`h-32 w-full relative ${doc.coverImageUrl ? "bg-gray-100" : `bg-gradient-to-r ${gradient}`}`}>
+                                {doc.coverImageUrl && (
+                                    <img 
+                                        src={doc.coverImageUrl} 
+                                        alt={doc.title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                )}
+                                <button
+                                    onClick={(e) => handleDeleteClick(e, doc._id)}
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 bg-white/90 hover:bg-white rounded-md transition-all shadow-sm z-10"
+                                    title="Delete document"
+                                >
+                                    <Trash2 className="w-4 h-4 text-red-600" />
+                                </button>
+                            </div>
+
+                            {/* Info Area */}
+                            <div className="p-4 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <h3 className="font-medium text-gray-900 truncate text-lg" title={doc.title}>
+                                        {doc.title || "Untitled"}
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {new Date(doc._creationTime).toLocaleDateString()}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <h3 className="font-medium text-gray-900 truncate" title={doc.title}>
-                                {doc.title}
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-1">
-                                {new Date(doc._creationTime).toLocaleDateString()}
-                            </p>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
+
+            <ConfirmDialog
+                isOpen={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Document"
+                description="Are you sure you want to delete this document? This action cannot be undone and will also delete any associated cover images."
+                confirmText="Delete"
+                variant="danger"
+                isLoading={isDeleting}
+            />
         </div>
     );
 }

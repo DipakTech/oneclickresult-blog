@@ -16,7 +16,11 @@ export default defineSchema({
     documents: defineTable({
         title: v.string(),
         content: v.optional(v.string()),
-        coverImageId: v.optional(v.id("_storage")),
+        coverImageId: v.optional(v.union(v.id("_storage"), v.null())),
         userId: v.optional(v.string()),
-    }).index("by_userId", ["userId"]),
+        isPublished: v.optional(v.boolean()),
+        slug: v.optional(v.string()), // URL-friendly slug
+    })
+    .index("by_userId", ["userId"])
+    .index("by_slug", ["slug"]), // Index for fast lookup by slug
 });

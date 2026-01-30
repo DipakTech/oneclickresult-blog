@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvex } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Eye } from "lucide-react";
+import CoverImage from "../../../components/CoverImage";
 
 const Editor = dynamic(() => import("../../../components/Editor"), { ssr: false });
 
@@ -17,6 +18,8 @@ interface DocumentEditorProps {
 export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     const document = useQuery(api.documents.getDocument, { id: documentId });
     const updateDocument = useMutation(api.documents.updateDocument);
+    const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+    const convex = useConvex();
     const router = useRouter();
 
     const [title, setTitle] = useState("");
@@ -57,6 +60,38 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
         debouncedSave(newTitle);
     };
 
+    const handleCoverImageUpload = async (file: File) => {
+        const postUrl = await generateUploadUrl();
+        
+        const result = await fetch(postUrl, {
+            method: "POST",
+            headers: { "Content-Type": file.type },
+            body: file,
+        });
+
+        const { storageId } = await result.json();
+        
+        await updateDocument({
+            id: documentId,
+            coverImageId: storageId,
+        });
+    };
+
+    const handleCoverImageRemove = async () => {
+        await updateDocument({
+            id: documentId,
+            coverImageId: undefined, // Convex handles undefined as removing the field or setting to null depending on schema, here we want to remove the id
+        });
+    };
+
+    const handlePublishToggle = async () => {
+        if (!document) return;
+        await updateDocument({
+            id: documentId,
+            isPublished: !document.isPublished,
+        });
+    };
+
     if (document === undefined) {
         return (
             <div className="flex items-center justify-center h-screen bg-white">
@@ -74,16 +109,48 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     }
 
     return (
-        <div className="min-h-screen bg-white">
-            <div className="p-8 max-w-4xl mx-auto">
+        <div className="min-h-screen bg-white pb-40">
+            <CoverImage
+                url={document.coverImageUrl}
+                documentId={documentId}
+                editable={true}
+                onUpload={handleCoverImageUpload}
+                onRemove={handleCoverImageRemove}
+            >
+                <div className="max-w-4xl mx-auto">
+                    {/* Status Badge */}
+                    <div className="mb-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            document.isPublished 
+                                ? "bg-green-100 text-green-800" 
+                                : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                            {document.isPublished ? "Published" : "Draft"}
+                        </span>
+                    </div>
+
+                    <input
+                        value={title}
+                        onChange={handleTitleChange}
+                        className="text-5xl font-bold text-white w-full border-none focus:outline-none focus:ring-0 bg-transparent placeholder-white/70 px-0 drop-shadow-md"
+                        placeholder="Untitled"
+                    />
+                </div>
+            </CoverImage>
+            
+            <div className="max-w-4xl mx-auto px-8 mt-12">
                 <div className="mb-8">
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                        <input
-                            value={title}
-                            onChange={handleTitleChange}
-                            className="text-4xl font-bold text-gray-900 w-full border-none focus:outline-none focus:ring-0 bg-transparent placeholder-gray-400"
-                            placeholder="Untitled"
-                        />
+                    <div className="flex items-center justify-end mb-4 gap-2">
+                         <button
+                            onClick={handlePublishToggle}
+                            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                                document.isPublished
+                                    ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                                    : "bg-green-600 text-white hover:bg-green-700"
+                            }`}
+                        >
+                            {document.isPublished ? "Unpublish" : "Publish"}
+                        </button>
                         <button
                             onClick={() => router.push(`/documents/${documentId}/view`)}
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
@@ -93,15 +160,6 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
                             Preview
                         </button>
                     </div>
-                    {document.coverImageUrl && (
-                        <div className="relative w-full h-64 mb-6">
-                            <img
-                                src={document.coverImageUrl}
-                                alt={document.title}
-                                className="w-full h-full object-cover rounded-lg shadow-md"
-                            />
-                        </div>
-                    )}
                 </div>
                 <Editor
                     documentId={documentId}

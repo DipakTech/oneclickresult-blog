@@ -1,11 +1,14 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import dynamic from "next/dynamic";
-import { Calendar, Edit } from "lucide-react";
+import { Calendar, Edit, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import ConfirmDialog from "./ConfirmDialog";
+import CoverImage from "./CoverImage";
 
 const Editor = dynamic(() => import("./Editor"), { ssr: false });
 
@@ -15,7 +18,24 @@ interface DocumentBlogViewProps {
 
 export default function DocumentBlogView({ documentId }: DocumentBlogViewProps) {
     const document = useQuery(api.documents.getDocument, { id: documentId });
+    const deleteDocument = useMutation(api.documents.deleteDocument);
     const router = useRouter();
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDeleteConfirm = async () => {
+        setIsDeleting(true);
+        try {
+            await deleteDocument({ id: documentId });
+            router.push("/");
+        } catch (error) {
+            console.error("Failed to delete document:", error);
+            alert("Failed to delete document. Please try again.");
+        } finally {
+            setIsDeleting(false);
+            setDeleteDialogOpen(false);
+        }
+    };
 
     if (document === undefined) {
         return (
@@ -41,42 +61,48 @@ export default function DocumentBlogView({ documentId }: DocumentBlogViewProps) 
     });
 
     return (
-        <article className="min-h-screen bg-white">
-            <div className="max-w-3xl mx-auto px-6 py-12">
-                {/* Header Section */}
-                <header className="mb-12">
-                    <div className="flex items-start justify-between gap-4 mb-6">
-                        <h1 className="text-5xl font-bold text-gray-900 leading-tight flex-1">
-                            {document.title || "Untitled"}
-                        </h1>
-                        <button
-                            onClick={() => router.push(`/documents/${documentId}`)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
-                            title="Edit document"
-                        >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                        </button>
-                    </div>
-                    
-                    {/* Publication Date */}
-                    <div className="flex items-center gap-2 text-gray-600 mb-8">
-                        <Calendar className="w-4 h-4" />
-                        <time dateTime={publicationDate.toISOString()}>
-                            {formattedDate}
-                        </time>
-                    </div>
+        <article className="min-h-screen bg-white pb-20">
+            {/* Cover Image - Full width banner */}
+            <CoverImage
+                url={document.coverImageUrl}
+                documentId={documentId}
+            >
+                <h1 className="text-5xl font-bold text-white leading-tight drop-shadow-md">
+                    {document.title || "Untitled"}
+                </h1>
+            </CoverImage>
 
-                    {/* Cover Image */}
-                    {document.coverImageUrl && (
-                        <div className="relative w-full mb-8 rounded-lg overflow-hidden shadow-xl">
-                            <img
-                                src={document.coverImageUrl}
-                                alt={document.title}
-                                className="w-full h-auto object-cover"
-                            />
+            <div className="max-w-3xl mx-auto px-6 mt-8">
+                {/* Header Section */}
+                <header className="mb-12 border-b pb-8">
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                        {/* Publication Date */}
+                        <div className="flex items-center gap-2 text-gray-500">
+                            <Calendar className="w-4 h-4" />
+                            <time dateTime={publicationDate.toISOString()} className="text-sm font-medium">
+                                {formattedDate}
+                            </time>
                         </div>
-                    )}
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => router.push(`/documents/${documentId}`)}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors whitespace-nowrap"
+                                title="Edit document"
+                            >
+                                <Edit className="w-4 h-4" />
+                                Edit
+                            </button>
+                            <button
+                                onClick={() => setDeleteDialogOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors whitespace-nowrap"
+                                title="Delete document"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 </header>
 
                 {/* Content Section */}
@@ -88,6 +114,17 @@ export default function DocumentBlogView({ documentId }: DocumentBlogViewProps) 
                     />
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Document"
+                description="Are you sure you want to delete this document? This action cannot be undone and will also delete any associated cover images."
+                confirmText="Delete"
+                variant="danger"
+                isLoading={isDeleting}
+            />
         </article>
     );
 }

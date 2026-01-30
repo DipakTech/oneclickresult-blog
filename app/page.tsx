@@ -13,6 +13,12 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<Doc<"files"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleFileDelete = () => {
+    setSelectedFile(null);
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -46,6 +52,7 @@ export default function Home() {
                 selectedFileId={selectedFile?._id ?? null}
                 searchQuery={searchQuery}
                 viewMode={viewMode}
+                key={refreshKey}
               />
             </div>
           </main>
@@ -55,6 +62,7 @@ export default function Home() {
             <FileDetailsSidebar
               file={selectedFile}
               onClose={() => setSelectedFile(null)}
+              onDelete={handleFileDelete}
             />
           )}
         </div>

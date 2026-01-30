@@ -54,3 +54,19 @@ export const getFileUrl = query({
         return await ctx.storage.getUrl(args.storageId);
     },
 });
+
+export const deleteFile = mutation({
+    args: { id: v.id("files") },
+    handler: async (ctx, args) => {
+        const file = await ctx.db.get(args.id);
+        if (!file) {
+            throw new Error("File not found");
+        }
+
+        // Delete file from storage
+        await ctx.storage.delete(file.storageId);
+
+        // Delete the file record
+        await ctx.db.delete(args.id);
+    },
+});

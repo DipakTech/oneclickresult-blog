@@ -142,7 +142,7 @@ export default function Editor({ documentId, initialContent, editable = true }: 
     },
     editorProps: {
       attributes: {
-        class: "prose prose-lg focus:outline-none max-w-full min-h-[300px] prose-img:rounded-2xl prose-img:shadow-xl prose-figure:my-8",
+        class: "focus:outline-none max-w-full min-h-[300px]",
       },
       handleDrop: (view, event, slice, moved) => {
         if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {

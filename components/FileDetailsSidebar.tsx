@@ -1,19 +1,41 @@
 "use client";
 
-import { X, FileText, Image as ImageIcon, File, Download } from "lucide-react";
-import { useQuery } from "convex/react";
+import { X, FileText, Image as ImageIcon, File, Download, Trash2 } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Doc } from "../convex/_generated/dataModel";
+import { useState } from "react";
+import ConfirmDialog from "./ConfirmDialog";
 
 interface FileDetailsSidebarProps {
     file: Doc<"files"> | null;
     onClose: () => void;
+    onDelete?: () => void;
 }
 
-export default function FileDetailsSidebar({ file, onClose }: FileDetailsSidebarProps) {
+export default function FileDetailsSidebar({ file, onClose, onDelete }: FileDetailsSidebarProps) {
     const fileUrl = useQuery(api.files.getFileUrl,
         file ? { storageId: file.storageId } : "skip"
     );
+    const deleteFile = useMutation(api.files.deleteFile);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDeleteConfirm = async () => {
+        if (!file) return;
+        setIsDeleting(true);
+        try {
+            await deleteFile({ id: file._id });
+            setDeleteDialogOpen(false);
+            onClose();
+            onDelete?.();
+        } catch (error) {
+            console.error("Failed to delete file:", error);
+            alert("Failed to delete file. Please try again.");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     if (!file) return null;
 
@@ -77,7 +99,7 @@ export default function FileDetailsSidebar({ file, onClose }: FileDetailsSidebar
 
                     {/* Download Button */}
                     {fileUrl && (
-                        <div className="pt-4">
+                        <div className="pt-4 space-y-2">
                             <a
                                 href={fileUrl}
                                 target="_blank"
@@ -87,10 +109,28 @@ export default function FileDetailsSidebar({ file, onClose }: FileDetailsSidebar
                                 <Download className="w-4 h-4 mr-2" />
                                 Download
                             </a>
+                            <button
+                                onClick={() => setDeleteDialogOpen(true)}
+                                className="flex items-center justify-center w-full py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium"
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete File
+                            </button>
                         </div>
                     )}
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete File"
+                description="Are you sure you want to delete this file? This action cannot be undone."
+                confirmText="Delete"
+                variant="danger"
+                isLoading={isDeleting}
+            />
         </aside>
     );
 }
