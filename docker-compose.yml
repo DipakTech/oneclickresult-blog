@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  file-storage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: file-storage
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    # Add other environment variables here or use env_file
+    # env_file:
+    #   - .env.local
