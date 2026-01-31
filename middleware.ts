@@ -47,9 +47,10 @@ export async function middleware(req: NextRequest) {
     const loginUrl = new URL(`${mainDomain}/auth/signin`);
     
     // Set callback URL to the current page on the blog
-    // NOTE: This assumes the blog is accessible via the hostname in request
-    // or hardcoded blog url
-    const currentUrl = req.nextUrl.toString();
+    // We derive the public URL from headers to avoid internal Docker hostnames (0.0.0.0)
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "blog.oneclickresult.com";
+    const protocol = req.headers.get("x-forwarded-proto") || "https";
+    const currentUrl = `${protocol}://${host}${path}`;
     loginUrl.searchParams.set("callbackUrl", currentUrl);
     
     return NextResponse.redirect(loginUrl);
