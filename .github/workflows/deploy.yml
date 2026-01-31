@@ -79,23 +79,23 @@ jobs:
             IMAGE_RAW="ghcr.io/${{ github.repository }}"
             IMAGE_NAME=$(echo $IMAGE_RAW | tr '[:upper:]' '[:lower:]')
 
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GHCR_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             mkdir -p ~/file-storage
             cd ~/file-storage
 
             # Create a Docker network for the services if it doesn't exist
-            docker network create file-storage-network 2>/dev/null || true
+            sudo docker network create file-storage-network 2>/dev/null || true
 
             # Pull the latest image
-            docker pull $IMAGE_NAME:latest
+            sudo docker pull $IMAGE_NAME:latest
 
             # Stop and remove existing container
-            docker stop file-storage 2>/dev/null || true
-            docker rm file-storage 2>/dev/null || true
+            sudo docker stop file-storage 2>/dev/null || true
+            sudo docker rm file-storage 2>/dev/null || true
 
             # Start the file-storage container
-            docker run -d \
+            sudo docker run -d \
               --name file-storage \
               --network file-storage-network \
               --restart unless-stopped \
@@ -110,10 +110,10 @@ jobs:
               -e NEXT_PUBLIC_MAIN_DOMAIN_URL="${{ secrets.NEXT_PUBLIC_MAIN_DOMAIN_URL }}" \
               $IMAGE_NAME:latest
 
-            docker image prune -af --filter "until=24h"
+            sudo docker image prune -af --filter "until=24h"
 
             echo "Running containers:"
-            docker ps | grep "file-storage"
+            sudo docker ps | grep "file-storage"
 
       - name: Health Check
         uses: appleboy/ssh-action@v1.0.3
