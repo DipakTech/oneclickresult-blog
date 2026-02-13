@@ -57,28 +57,33 @@ export default function ArticleContent({ slug }: { slug: string }) {
     }
 
     const publicationDate = new Date(document._creationTime);
+    const modifiedDate = document.lastModified ? new Date(document.lastModified) : publicationDate;
     const formattedDate = publicationDate.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
 
-    // Extract description from content
+    // Extract description from content or use meta description
     const textContent = extractTextFromContent(document.content);
-    const description = textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
+    const description = document.metaDescription || textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
 
-    // JSON-LD Structured Data
+    // Calculate word count for structured data
+    const wordCount = textContent.trim().split(/\s+/).length;
+
+    // JSON-LD Structured Data (Enhanced with SEO fields)
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'Article',
-        headline: document.title,
+        headline: document.metaTitle || document.title,
         description: description,
         image: document.coverImageUrl || `${baseUrl}/og-default.png`,
         datePublished: publicationDate.toISOString(),
-        dateModified: publicationDate.toISOString(),
+        dateModified: modifiedDate.toISOString(),
         author: {
             '@type': 'Person',
-            name: 'Blog Author',
+            name: document.authorName || 'Blog Author',
+            ...(document.authorImageUrl && { image: document.authorImageUrl }),
         },
         publisher: {
             '@type': 'Organization',
@@ -88,7 +93,18 @@ export default function ArticleContent({ slug }: { slug: string }) {
                 url: `${baseUrl}/logo.png`,
             },
         },
+        mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `${baseUrl}/articles/${slug}`,
+        },
         url: `${baseUrl}/articles/${slug}`,
+        ...(document.metaKeywords && document.metaKeywords.length > 0 && { 
+            keywords: document.metaKeywords.join(', ') 
+        }),
+        ...(wordCount > 0 && { wordCount }),
+        ...(document.readingTime && { 
+            timeRequired: `PT${document.readingTime}M` // ISO 8601 duration format
+        }),
     };
 
     return (

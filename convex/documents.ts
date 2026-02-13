@@ -11,6 +11,33 @@ function generateSlug(title: string) {
         .replace(/^-+|-+$/g, "");
 }
 
+// Helper to calculate reading time (average 200 words per minute)
+function calculateReadingTime(content: string | undefined): number {
+    if (!content) return 0;
+    
+    try {
+        const json = JSON.parse(content);
+        let text = '';
+        
+        // Extract text from Tiptap JSON
+        function traverse(node: any) {
+            if (node.type === 'text') {
+                text += node.text + ' ';
+            }
+            if (node.content && Array.isArray(node.content)) {
+                node.content.forEach(traverse);
+            }
+        }
+        
+        traverse(json);
+        
+        const words = text.trim().split(/\s+/).length;
+        return Math.ceil(words / 200); // Reading speed: 200 words/min
+    } catch {
+        return 0;
+    }
+}
+
 export const createDocument = mutation({
     args: {
         title: v.string(),
@@ -35,6 +62,16 @@ export const updateDocument = mutation({
         content: v.optional(v.string()),
         coverImageId: v.optional(v.union(v.id("_storage"), v.null())),
         isPublished: v.optional(v.boolean()),
+        authorName: v.optional(v.string()),
+        authorImageUrl: v.optional(v.string()),
+        
+        // SEO Metadata
+        metaTitle: v.optional(v.string()),
+        metaDescription: v.optional(v.string()),
+        metaKeywords: v.optional(v.array(v.string())),
+        ogImageId: v.optional(v.id("_storage")),
+        canonicalUrl: v.optional(v.string()),
+        focusKeyphrase: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const { id, ...rest } = args;
@@ -54,7 +91,6 @@ export const updateDocument = mutation({
             let slug = generateSlug(titleToSlug);
             
             // Ensure uniqueness: check if slug exists (excluding current doc)
-            // Note: This is a simple check. For high concurrency, might need more.
             const existingSlug = await ctx.db
                 .query("documents")
                 .withIndex("by_slug", (q) => q.eq("slug", slug))
@@ -66,6 +102,17 @@ export const updateDocument = mutation({
             }
             
             patchData.slug = slug;
+        }
+        
+        // Auto-calculate reading time when content is updated
+        if (rest.content !== undefined) {
+            patchData.readingTime = calculateReadingTime(rest.content);
+            patchData.lastModified = Date.now();
+        }
+        
+        // Update lastModified on any edit
+        if (Object.keys(rest).length > 0) {
+            patchData.lastModified = Date.now();
         }
 
         await ctx.db.patch(id, patchData);

@@ -49,7 +49,7 @@ export default function CoverImage({
 
     return (
         <div 
-            className={`relative w-full h-[35vh] min-h-[250px] group transition-all duration-300 overflow-hidden ${url ? "bg-gray-100" : `bg-gradient-to-r ${gradient}`}`}
+            className={`relative w-full h-[20vh] min-h-[150px] group transition-all duration-300 overflow-hidden ${url ? "bg-gray-100" : `bg-gradient-to-r ${gradient}`}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
