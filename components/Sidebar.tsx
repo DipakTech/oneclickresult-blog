@@ -21,7 +21,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const createDocument = useMutation(api.documents.createDocument);
-  const documents = useQuery(api.documents.getDocuments);
+  const documents = useQuery(api.documents.getDocuments, {});
   const router = useRouter();
   const pathname = usePathname();
   const [isCreating, setIsCreating] = useState(false);
