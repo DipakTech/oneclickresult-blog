@@ -20,6 +20,8 @@ export default defineSchema({
         userId: v.optional(v.string()),
         isPublished: v.optional(v.boolean()),
         slug: v.optional(v.string()), // URL-friendly slug
+        authorName: v.optional(v.string()),
+        authorImageUrl: v.optional(v.string()),
     })
     .index("by_userId", ["userId"])
     .index("by_slug", ["slug"]), // Index for fast lookup by slug

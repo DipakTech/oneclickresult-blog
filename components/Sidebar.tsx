@@ -1,94 +1,187 @@
 "use client";
 
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { useRouter } from "next/navigation";
-import { Plus, HardDrive, Clock, Star, Trash2, Cloud, LayoutDashboard } from "lucide-react";
-import FileUploader from "./FileUploader";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  Plus,
+  Newspaper,
+  LayoutDashboard,
+  X,
+  FileText,
+  Image as ImageIcon,
+  Settings,
+} from "lucide-react";
 import { useState } from "react";
 
-export default function Sidebar() {
-    const createDocument = useMutation(api.documents.createDocument);
-    const router = useRouter();
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
 
-    const [isCreating, setIsCreating] = useState(false);
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+  const createDocument = useMutation(api.documents.createDocument);
+  const documents = useQuery(api.documents.getDocuments);
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isCreating, setIsCreating] = useState(false);
 
-    const handleCreateDocument = async () => {
-        if (isCreating) return;
-        setIsCreating(true);
-        try {
-            const documentId = await createDocument({ title: "Untitled" });
-            router.push(`/documents/${documentId}`);
-        } catch (error) {
-            console.error("Failed to create document:", error);
-            alert("Failed to create document. Please try again.");
-        } finally {
-            setIsCreating(false);
-        }
-    };
+  const draftCount = documents?.filter((d) => !d.isPublished)?.length ?? 0;
 
-    return (
-        <aside className="w-64 bg-white border-r flex flex-col h-full hidden md:flex">
-            <div className="p-4">
-                <div className="flex items-center mb-8 px-2">
-                    <span className="text-2xl mr-2">📂</span>
-                    <h1 className="text-xl font-bold text-gray-700">My Drive</h1>
-                </div>
+  const handleCreateDocument = async () => {
+    if (isCreating) return;
+    setIsCreating(true);
+    try {
+      const documentId = await createDocument({ title: "Untitled Post" });
+      router.push(`/documents/${documentId}`);
+    } catch (error) {
+      console.error("Failed to create document:", error);
+      alert("Failed to create document. Please try again.");
+    } finally {
+      setIsCreating(false);
+      if (onClose) onClose();
+    }
+  };
 
-                <div className="space-y-2">
-                    <button
-                        onClick={handleCreateDocument}
-                        disabled={isCreating}
-                        className={`w-full flex items-center justify-center px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-full text-gray-700 font-medium hover:bg-gray-50 hover:shadow transition-all mb-4 ${isCreating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        {isCreating ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
-                        ) : (
-                            <Plus className="w-5 h-5 mr-2 text-blue-600" />
-                        )}
-                        {isCreating ? "Creating..." : "New Document"}
-                    </button>
+  const handleNavigation = (path: string) => {
+    router.push(path);
+    if (onClose) onClose();
+  };
 
-                    <button
-                        onClick={() => router.push("/articles")}
-                        className="w-full flex items-center px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded-lg transition-colors mb-2"
-                    >
-                        <span className="mr-3 text-lg">📰</span>
-                        Read Articles
-                    </button>
+  const navItems = [
+    { path: "/", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/articles", icon: Newspaper, label: "All Articles" },
+    { path: "/drafts", icon: FileText, label: "Drafts", badge: draftCount },
+    { path: "/media", icon: ImageIcon, label: "Media Library" },
+  ];
 
-                    <FileUploader />
-                </div>
+  return (
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+          onClick={onClose}
+        />
+      )}
+
+      <aside
+        className={`
+        fixed inset-y-0 left-0 z-50 w-sidebar
+        bg-surface border-r border-border
+        flex flex-col h-full
+        transform transition-transform duration-300 ease-smooth
+        md:relative md:translate-x-0
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
+      >
+        {/* Logo Header — 80px */}
+        <div className="h-20 px-5 flex items-center justify-between border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-card bg-primary flex items-center justify-center">
+              <span className="text-white text-lg font-bold">O</span>
             </div>
-
-            {/* <nav className="space-y-1 flex-1">
-                <a href="#" className="flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-r-full font-medium">
-                    <HardDrive className="w-5 h-5 mr-3" />
-                    My Drive
-                </a>
-                <a href="#" className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-full">
-                    <LayoutDashboard className="w-5 h-5 mr-3" />
-                    Shared with me
-                </a>
-                <a href="#" className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-full">
-                    <Star className="w-5 h-5 mr-3" />
-                    Starred
-                </a>
-                <a href="#" className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-full">
-                    <Trash2 className="w-5 h-5 mr-3" />
-                    Trash
-                </a>
-            </nav> */}
-
-            <div className="mt-auto px-4 py-4 border-t">
-                <div className="text-xs text-gray-500">
-                    <p className="font-semibold text-gray-700 mb-1">Storage</p>
-                    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                        <div className="bg-blue-600 h-1.5 rounded-full w-1/4"></div>
-                    </div>
-                    <p>1.2 GB of 15 GB used</p>
-                </div>
+            <div>
+              <h1 className="text-[15px] font-bold text-text-primary leading-tight tracking-tight">
+                OneClickResult
+              </h1>
+              <span className="text-[11px] font-medium text-text-tertiary uppercase tracking-wider">
+                CMS
+              </span>
             </div>
-        </aside>
-    );
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-bg-secondary md:hidden transition-colors"
+          >
+            <X className="w-5 h-5 text-text-tertiary" />
+          </button>
+        </div>
+
+        {/* New Post Button */}
+        <div className="px-4 pt-5 pb-2">
+          <button
+            onClick={handleCreateDocument}
+            disabled={isCreating}
+            className={`
+              w-full flex items-center justify-center gap-2
+              px-4 h-12 rounded-btn
+              bg-primary text-white font-semibold text-sm
+              hover:bg-primary-hover
+              shadow-sm hover:shadow-md
+              transition-all duration-200
+              ${isCreating ? "opacity-70 cursor-not-allowed" : "active:scale-[0.98]"}
+            `}
+          >
+            {isCreating ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white" />
+            ) : (
+              <Plus className="w-5 h-5" />
+            )}
+            {isCreating ? "Creating..." : "New Post"}
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3 pt-4 space-y-0.5 overflow-y-auto">
+          <p className="px-3 text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-2">
+            Menu
+          </p>
+          {navItems.map((item) => {
+            const isActive = pathname === item.path;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.path}
+                onClick={() => handleNavigation(item.path)}
+                className={`
+                  w-full flex items-center gap-3 px-3 h-12 rounded-xl
+                  font-medium text-sm transition-all duration-200
+                  ${
+                    isActive
+                      ? "bg-primary-subtle text-primary font-semibold"
+                      : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
+                  }
+                `}
+              >
+                <Icon
+                  className={`w-[18px] h-[18px] flex-shrink-0 ${
+                    isActive ? "text-primary" : "text-text-tertiary"
+                  }`}
+                />
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span
+                    className={`
+                    min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold
+                    flex items-center justify-center
+                    ${
+                      isActive
+                        ? "bg-primary text-white"
+                        : "bg-bg-secondary text-text-tertiary"
+                    }
+                  `}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom Section */}
+        <div className="p-3 border-t border-border">
+          <button
+            className="w-full flex items-center gap-3 px-3 h-12 rounded-xl
+              text-text-secondary hover:bg-bg-secondary hover:text-text-primary
+              font-medium text-sm transition-all duration-200"
+          >
+            <Settings className="w-[18px] h-[18px] text-text-tertiary" />
+            Settings
+          </button>
+        </div>
+      </aside>
+    </>
+  );
 }

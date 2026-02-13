@@ -14,11 +14,15 @@ function generateSlug(title: string) {
 export const createDocument = mutation({
     args: {
         title: v.string(),
+        authorName: v.optional(v.string()),
+        authorImageUrl: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const documentId = await ctx.db.insert("documents", {
             title: args.title,
             isPublished: false,
+            authorName: args.authorName,
+            authorImageUrl: args.authorImageUrl,
         });
         return documentId;
     },
@@ -110,12 +114,21 @@ export const getArticleBySlug = query({
 });
 
 export const getDocuments = query({
-    args: {},
-    handler: async (ctx) => {
+    args: {
+        isDraft: v.optional(v.boolean()),
+    },
+    handler: async (ctx, args) => {
         const documents = await ctx.db.query("documents").order("desc").collect();
-        // ... (existing implementation)
+        
+        let filteredDocs = documents;
+        if (args.isDraft !== undefined) {
+             filteredDocs = documents.filter(doc => 
+                args.isDraft ? !doc.isPublished : doc.isPublished
+             );
+        }
+        
         return Promise.all(
-            documents.map(async (doc) => {
+            filteredDocs.map(async (doc) => {
                 let coverImageUrl = undefined;
                 if (doc.coverImageId) {
                     coverImageUrl = await ctx.storage.getUrl(doc.coverImageId);

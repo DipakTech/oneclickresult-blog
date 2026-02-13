@@ -4,59 +4,78 @@ import { FileText, Image as ImageIcon, File, MoreVertical } from "lucide-react";
 import { Doc } from "../convex/_generated/dataModel";
 
 interface FileRowProps {
-    file: Doc<"files"> & { url: string | null };
-    onClick: () => void;
-    isSelected?: boolean;
+  file: Doc<"files"> & { url: string | null };
+  onClick: () => void;
+  isSelected?: boolean;
 }
 
 export default function FileRow({ file, onClick, isSelected }: FileRowProps) {
-    const getIcon = (type: string) => {
-        switch (type) {
-            case "image":
-                return <ImageIcon className="w-5 h-5 text-purple-500" />;
-            case "pdf":
-                return <FileText className="w-5 h-5 text-red-500" />;
-            case "csv":
-                return <FileText className="w-5 h-5 text-green-500" />;
-            default:
-                return <File className="w-5 h-5 text-gray-400" />;
-        }
-    };
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "image":
+        return <ImageIcon className="w-5 h-5 text-accent-purple" />;
+      case "pdf":
+        return <FileText className="w-5 h-5 text-danger" />;
+      case "csv":
+        return <FileText className="w-5 h-5 text-success" />;
+      default:
+        return <File className="w-5 h-5 text-text-tertiary" />;
+    }
+  };
 
-    return (
-        <tr
-            onClick={onClick}
-            className={`border-b hover:bg-gray-50 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 hover:bg-blue-100' : ''
-                }`}
+  return (
+    <tr
+      onClick={onClick}
+      className={`
+        group h-14 border-b border-border
+        hover:bg-bg-secondary cursor-pointer
+        transition-colors duration-150
+        ${isSelected ? "bg-primary-subtle hover:bg-primary-subtle" : ""}
+      `}
+    >
+      <td className="px-5 py-3 whitespace-nowrap">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-bg-secondary rounded-lg">
+            {file.type === "image" && file.url ? (
+              <img
+                src={file.url}
+                alt=""
+                className="h-8 w-8 object-cover rounded-lg"
+              />
+            ) : (
+              getIcon(file.type)
+            )}
+          </div>
+          <span
+            className="text-sm font-medium text-text-primary truncate max-w-[240px]"
+            title={file.name}
+          >
+            {file.name}
+          </span>
+        </div>
+      </td>
+      <td className="px-5 py-3 whitespace-nowrap text-sm text-text-secondary">
+        Me
+      </td>
+      <td className="px-5 py-3 whitespace-nowrap text-sm text-text-secondary font-mono text-[13px]">
+        Today
+      </td>
+      <td className="px-5 py-3 whitespace-nowrap text-sm text-text-secondary font-mono text-[13px]">
+        {(file.size / 1024).toFixed(2)} KB
+      </td>
+      <td className="px-5 py-3 whitespace-nowrap text-right">
+        <button
+          className="
+            opacity-0 group-hover:opacity-100
+            p-1.5 rounded-lg
+            text-text-tertiary hover:text-text-primary hover:bg-surface
+            transition-all duration-150
+          "
+          onClick={(e) => e.stopPropagation()}
         >
-            <td className="px-4 py-3 whitespace-nowrap">
-                <div className="flex items-center">
-                    <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-gray-100 rounded mr-3">
-                        {file.type === 'image' && file.url ? (
-                            <img src={file.url} alt="" className="h-8 w-8 object-cover rounded" />
-                        ) : (
-                            getIcon(file.type)
-                        )}
-                    </div>
-                    <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]" title={file.name}>
-                        {file.name}
-                    </div>
-                </div>
-            </td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                Me
-            </td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                Today
-            </td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                {(file.size / 1024).toFixed(2)} KB
-            </td>
-            <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                <button className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
-                    <MoreVertical className="w-4 h-4" />
-                </button>
-            </td>
-        </tr>
-    );
+          <MoreVertical className="w-4 h-4" />
+        </button>
+      </td>
+    </tr>
+  );
 }
