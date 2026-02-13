@@ -105,7 +105,7 @@ export default function Editor({ documentId, initialContent, editable = true, on
                 const { schema } = view.state;
                 const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
                 if (coordinates) {
-                  const node = schema.nodes.resizableImage.create({ src: url });
+                  const node = schema.nodes.image.create({ src: url });
                   const transaction = view.state.tr.insert(coordinates.pos, node);
                   view.dispatch(transaction);
                 }

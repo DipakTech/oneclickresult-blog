@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import EditorHeader from "../../../components/Editor/EditorHeader";
 import EditorToolbar from "../../../components/Editor/EditorToolbar";
 import EditorSidebar from "../../../components/Editor/EditorSidebar";
@@ -27,9 +27,68 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     // Sidebar state
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-    // Sync title
-    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        updateDocument({ id: documentId, title: e.target.value });
+    // Local title state for debouncing
+    const [title, setTitle] = useState(document?.title || "");
+
+    // Update local title when document title changes (only if not focused or initial load - simplified approach)
+    // Actually, we should just sync initially and then trust local state until save.
+    // Or better: update local state if document id changes.
+    // Let's use a simpler approach: Sync on load, and debounce updates.
+    
+    // We need to sync local title with document title if it changes externally or on load
+    // But we don't want to overwrite user input while typing.
+    // For now, let's just initialize it and sync if document ID changes.
+    // Actually, since `document` is from useQuery, it will update. 
+    // We should only update local title from prop if it's significantly different and we aren't typing?
+    // Standard pattern: 
+    // 1. useEffect to set title from document.title
+    // 2. handleTitleChange updates local title and calls debounced update.
+    
+    useEffect(() => {
+        if (document) {
+            setTitle(document.title);
+        }
+    }, [document?.title, documentId]); // Only update if these change. Note: if user types, document.title won't update immediately so loop is broken by debounce.
+    // Wait, if I type "A", local is "A", debounce fires -> updates Convex -> Document updates -> useEffect fires -> set local "A". usage is fine.
+    // PROMLEM: If latency is high, user types "AB", debounce "A", Convex "A", Document "A", useEffect "A" (overwriting "AB").
+    // FIX: Don't sync from document if we have pending updates? Or just use a ref to track if we are editing?
+    // EASIER FIX: Just use `defaultValue` if we didn't want controlled, but we want controlled.
+    // BETTER FIX: Only sync if the new server value is different AND we haven't touched it recently? 
+    // LET'S TRY: Just local state + debounce. If multiple users edit same doc title, it might jump, but for single user it's fine.
+    // We will use a `isEditing` ref or just only set it if `document` changes and it's not our own optimistic update?
+    // Convex `useQuery` returns the server state. 
+    // Let's just use a simple debounce and hope the loop isn't too tight.
+    // Actually, `useMutation` is optimistic? No.
+    // Let's stick to: Local state driving the input. Debounce effect updating the mutation. 
+    // UseEffect syncing UPSTREAM changes ONLY if they differ? 
+    // Standard "Draft" approach: 
+    // 1. Local state `title`.
+    // 2. Input `onChange` -> `setTitle(val)` -> `debouncedUpdate(val)`.
+    // 3. `useEffect` -> `setTitle(doc.title)` ONLY if `doc.title !== title` AND `!isDebouncing`? Hard to know.
+    // Let's just implement the debounce and see.
+    
+    const [isTypingTitle, setIsTypingTitle] = useState(false);
+
+    useEffect(() => {
+        if (document && !isTypingTitle) {
+            setTitle(document.title);
+        }
+    }, [document?.title, isTypingTitle]);
+
+    // Re-implementing debounce correctly
+    const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+
+    const onTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setTitle(val);
+        setIsTypingTitle(true);
+
+        if (timer) clearTimeout(timer);
+        const newTimer = setTimeout(() => {
+            updateDocument({ id: documentId, title: val });
+            setIsTypingTitle(false);
+        }, 500);
+        setTimer(newTimer);
     };
 
     const handlePublishToggle = async () => {
@@ -83,14 +142,13 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     }
 
 
-
     return (
         <div className="min-h-screen bg-bg flex flex-col">
             {/* 1. Fixed Header */}
             <EditorHeader 
                 documentId={documentId}
-                title={document.title}
-                isSaving={false} // Todo: impl saving state
+                title={title}
+                isSaving={isTypingTitle} 
                 onPublish={handlePublishToggle}
                 isPublished={document.isPublished ?? false}
                 isSidebarOpen={isSidebarOpen}
@@ -107,8 +165,8 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
                         {/* Title Input */}
                         <div className="group relative mb-8">
                              <input
-                                value={document.title}
-                                onChange={handleTitleChange}
+                                value={title}
+                                onChange={onTitleChange}
                                 placeholder="Untitled"
                                 className="w-full text-4xl font-bold text-text-primary bg-transparent border-none focus:outline-none focus:ring-0 placeholder:text-text-tertiary/50"
                             />

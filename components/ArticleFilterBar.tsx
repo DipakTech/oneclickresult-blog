@@ -17,7 +17,7 @@ export default function ArticleFilterBar({
   sortOption,
   onSortChange,
 }: ArticleFilterBarProps) {
-  const filters = ["All", "Published", "Draft", "Scheduled"];
+  const filters = ["All", "Technology", "Design", "Business"]; // Example topics instead of status
 
   return (
     <div className="h-16 flex items-center justify-between gap-4 mb-8">

@@ -1,25 +1,31 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Link from "next/link";
 import { ArrowLeft, Plus } from "lucide-react";
 import ArticleFilterBar from "../../components/ArticleFilterBar";
 import ArticleCard from "../../components/ArticleCard";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // Client-side component for interactivity
 export default function ArticlesPage() {
-    const documents = useQuery(api.documents.getDocuments) ?? [];
+    const documents = useQuery(api.documents.getPublishedDocuments, {}) ?? [];
+    // const createDocument = useMutation(api.documents.createDocument); // Removed for public viewer
+    // const router = useRouter(); // Removed
+    
     const [filter, setFilter] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [sortOption, setSortOption] = useState("Newest");
+    // const [isCreating, setIsCreating] = useState(false); // Removed
 
     // Filter logic
     const filteredDocs = documents.filter(doc => {
-        // Status Filter
-        if (filter === "Published" && !doc.isPublished) return false;
-        if (filter === "Draft" && doc.isPublished) return false;
+        // Status Filter - Removed since all are published
+        // if (filter === "Published" && !doc.isPublished) return false;
+        // if (filter === "Draft" && doc.isPublished) return false;
+        
         // Search Filter
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
@@ -44,7 +50,7 @@ export default function ArticlesPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Breadcrumbs */}
                     <nav className="flex items-center text-sm text-text-tertiary mb-4">
-                        <Link href="/" className="hover:text-text-primary transition-colors">Dashboard</Link>
+                        <Link href="/" className="hover:text-text-primary transition-colors">Home</Link>
                         <span className="mx-2">/</span>
                         <span className="text-text-primary font-medium">Articles</span>
                     </nav>
@@ -53,19 +59,11 @@ export default function ArticlesPage() {
                         <div>
                             <h1 className="text-4xl font-bold text-text-primary tracking-tight mb-2">Latest Stories</h1>
                             <p className="text-text-secondary text-base leading-relaxed max-w-2xl">
-                                Manage and view all your articles in one place.
+                                Explore our latest articles, guides, and insights.
                             </p>
                         </div>
                         
-                        <div className="flex items-center gap-3">
-                            <Link 
-                                href="/write" 
-                                className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors shadow-sm hover:shadow-md hover:-translate-y-0.5"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                New Article
-                            </Link>
-                        </div>
+                        {/* Removed New Article Button */}
                     </div>
                 </div>
             </header>
