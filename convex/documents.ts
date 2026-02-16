@@ -50,6 +50,7 @@ export const createDocument = mutation({
             isPublished: false,
             authorName: args.authorName,
             authorImageUrl: args.authorImageUrl,
+            viewCount: 0,
         });
         return documentId;
     },
@@ -230,3 +231,18 @@ export const deleteDocument = mutation({
         await ctx.db.delete(args.id);
     },
 });
+
+export const incrementViewCount = mutation({
+    args: { id: v.id("documents") },
+    handler: async (ctx, args) => {
+        const document = await ctx.db.get(args.id);
+        if (!document) {
+            throw new Error("Document not found");
+        }
+
+        await ctx.db.patch(args.id, {
+            viewCount: (document.viewCount || 0) + 1,
+        });
+    },
+});
+

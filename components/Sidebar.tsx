@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useRouter, usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Plus,
   Newspaper,
@@ -24,6 +25,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const documents = useQuery(api.documents.getDocuments, {});
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [isCreating, setIsCreating] = useState(false);
 
   const draftCount = documents?.filter((d) => !d.isPublished)?.length ?? 0;
@@ -32,7 +34,11 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     if (isCreating) return;
     setIsCreating(true);
     try {
-      const documentId = await createDocument({ title: "Untitled Post" });
+      const documentId = await createDocument({ 
+        title: "Untitled Post",
+        authorName: session?.user?.name || undefined,
+        authorImageUrl: session?.user?.image || undefined,
+      });
       router.push(`/documents/${documentId}`);
     } catch (error) {
       console.error("Failed to create document:", error);

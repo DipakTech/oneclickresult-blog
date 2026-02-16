@@ -7,6 +7,8 @@ import FileDetailsSidebar from "../components/FileDetailsSidebar";
 import { useState } from "react";
 import { Doc } from "../convex/_generated/dataModel";
 import { useSession } from "next-auth/react";
+import { useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
 import {
   LayoutGrid,
   List as ListIcon,
@@ -18,49 +20,6 @@ import {
   TrendingDown,
 } from "lucide-react";
 
-const statsConfig = [
-  {
-    label: "Total Articles",
-    value: "12",
-    trend: "+2 this week",
-    trendUp: true,
-    icon: Newspaper,
-    accentColor: "text-primary",
-    accentBg: "bg-primary-light",
-    iconColor: "text-primary",
-  },
-  {
-    label: "Drafts",
-    value: "4",
-    trend: "Pending review",
-    trendUp: false,
-    icon: FileEdit,
-    accentColor: "text-amber-500",
-    accentBg: "bg-warning-light",
-    iconColor: "text-amber-500",
-  },
-  {
-    label: "Media Files",
-    value: "28",
-    trend: "+5 this month",
-    trendUp: true,
-    icon: ImageIcon,
-    accentColor: "text-accent-purple",
-    accentBg: "bg-accent-purple-light",
-    iconColor: "text-accent-purple",
-  },
-  {
-    label: "Total Views",
-    value: "1.2k",
-    trend: "+12% vs last week",
-    trendUp: true,
-    icon: Eye,
-    accentColor: "text-success",
-    accentBg: "bg-success-light",
-    iconColor: "text-success",
-  },
-];
-
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<Doc<"files"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,6 +27,51 @@ export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { data: session } = useSession();
+  const dashboardStats = useQuery(api.stats.getDashboardStats);
+
+  // Define stats configuration with real data
+  const statsConfig = dashboardStats ? [
+    {
+      label: "Total Articles",
+      value: dashboardStats.totalArticles.toString(),
+      trend: "Published",
+      trendUp: true,
+      icon: Newspaper,
+      accentColor: "text-primary",
+      accentBg: "bg-primary-light",
+      iconColor: "text-primary",
+    },
+    {
+      label: "Drafts",
+      value: dashboardStats.totalDrafts.toString(),
+      trend: "Pending review",
+      trendUp: false,
+      icon: FileEdit,
+      accentColor: "text-amber-500",
+      accentBg: "bg-warning-light",
+      iconColor: "text-amber-500",
+    },
+    {
+      label: "Media Files",
+      value: dashboardStats.totalFiles.toString(),
+      trend: "In library",
+      trendUp: true,
+      icon: ImageIcon,
+      accentColor: "text-success",
+      accentBg: "bg-success-light",
+      iconColor: "text-success",
+    },
+    {
+      label: "Total Views",
+      value: dashboardStats.totalViews.toLocaleString(),
+      trend: "All articles",
+      trendUp: true,
+      icon: Eye,
+      accentColor: "text-success",
+      accentBg: "bg-success-light",
+      iconColor: "text-success",
+    },
+  ] : [];
 
   const handleFileDelete = () => {
     setSelectedFile(null);
@@ -110,44 +114,54 @@ export default function Home() {
 
               {/* Stats Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-12">
-                {statsConfig.map((stat) => {
-                  const Icon = stat.icon;
-                  return (
+                {dashboardStats === undefined ? (
+                  // Loading skeletons
+                  [...Array(4)].map((_, i) => (
                     <div
-                      key={stat.label}
-                      className="
-                        bg-surface border border-border rounded-card p-5
-                        hover-lift hover:shadow-card-hover
-                        cursor-default group
-                        transition-shadow duration-200
-                      "
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-caption text-text-tertiary uppercase tracking-wider">
-                          {stat.label}
-                        </span>
+                      key={i}
+                      className="bg-surface border border-border rounded-card p-4 skeleton-shimmer h-32"
+                    />
+                  ))
+                ) : (
+                  statsConfig.map((stat) => {
+                    const Icon = stat.icon;
+                    return (
+                      <div
+                        key={stat.label}
+                        className="
+                          bg-surface border border-border rounded-card p-4
+                          hover-lift hover:shadow-card-hover
+                          cursor-default group
+                          transition-shadow duration-200
+                        "
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-caption text-text-tertiary uppercase tracking-wider">
+                            {stat.label}
+                          </span>
+                          <div
+                            className={`w-8 h-8 rounded-lg ${stat.accentBg} flex items-center justify-center`}
+                          >
+                            <Icon className={`w-[17px] h-[17px] ${stat.iconColor}`} />
+                          </div>
+                        </div>
+                        <p className="text-[32px] font-extrabold text-text-primary leading-none mb-2 tracking-tight">
+                          {stat.value}
+                        </p>
                         <div
-                          className={`w-9 h-9 rounded-lg ${stat.accentBg} flex items-center justify-center`}
+                          className={`flex items-center gap-1 text-caption ${
+                            stat.trendUp ? "text-success" : "text-text-tertiary"
+                          }`}
                         >
-                          <Icon className={`w-[18px] h-[18px] ${stat.iconColor}`} />
+                          {stat.trendUp ? (
+                            <TrendingUp className="w-3.5 h-3.5" />
+                          ) : null}
+                          <span>{stat.trend}</span>
                         </div>
                       </div>
-                      <p className="text-[36px] font-extrabold text-text-primary leading-none mb-3 tracking-tight">
-                        {stat.value}
-                      </p>
-                      <div
-                        className={`flex items-center gap-1 text-caption ${
-                          stat.trendUp ? "text-success" : "text-text-tertiary"
-                        }`}
-                      >
-                        {stat.trendUp ? (
-                          <TrendingUp className="w-3.5 h-3.5" />
-                        ) : null}
-                        <span>{stat.trend}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
 
               {/* Documents & Files Sections */}

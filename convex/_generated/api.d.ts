@@ -10,6 +10,7 @@
 
 import type * as documents from "../documents.js";
 import type * as files from "../files.js";
+import type * as stats from "../stats.js";
 
 import type {
   ApiFromModules,
@@ -20,6 +21,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   documents: typeof documents;
   files: typeof files;
+  stats: typeof stats;
 }>;
 
 /**

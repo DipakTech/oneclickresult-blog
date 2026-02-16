@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { FileText, Plus, Trash2, ArrowRight } from "lucide-react";
+import { FileText, Plus, Trash2, ArrowRight, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ConfirmDialog from "./ConfirmDialog";
@@ -197,9 +197,19 @@ export default function DocumentList({ isDraft }: DocumentListProps) {
                             {doc.authorName || "Unknown"}
                         </span>
                     </div>
-                     <span className="text-[10px] text-text-tertiary font-mono">
-                        {new Date(doc._creationTime).toLocaleDateString()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {doc.viewCount !== undefined && doc.viewCount > 0 && (
+                        <div className="flex items-center gap-1 text-success">
+                          <Eye className="w-3 h-3" />
+                          <span className="text-[10px] font-mono font-semibold">
+                            {doc.viewCount}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-[10px] text-text-tertiary font-mono">
+                         {new Date(doc._creationTime).toLocaleDateString()}
+                     </span>
+                    </div>
                 </div>
               </div>
             </div>

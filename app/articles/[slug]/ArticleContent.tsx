@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import CoverImage from "../../../components/CoverImage";
 import dynamic from "next/dynamic";
-import { Calendar, ArrowLeft } from "lucide-react";
+import { Calendar, ArrowLeft, Eye, Clock } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 const Editor = dynamic(() => import("../../../components/Editor"), { ssr: false });
 
@@ -36,6 +37,16 @@ function extractTextFromContent(content: string | undefined): string {
 
 export default function ArticleContent({ slug }: { slug: string }) {
     const document = useQuery(api.documents.getArticleBySlug, { slug });
+    const incrementViewCount = useMutation(api.documents.incrementViewCount);
+
+    // Track view count on mount (public article view only)
+    useEffect(() => {
+        if (document && document._id) {
+            incrementViewCount({ id: document._id }).catch((error) => {
+                console.error("Failed to increment view count:", error);
+            });
+        }
+    }, [document?._id]);
 
     if (document === undefined) {
         return (
@@ -144,8 +155,24 @@ export default function ArticleContent({ slug }: { slug: string }) {
                         <time dateTime={publicationDate.toISOString()} className="font-medium">
                             {formattedDate}
                         </time>
-                        <span className="text-gray-300">•</span>
-                        <span>5 min read</span>
+                        {document.readingTime && (
+                            <>
+                                <span className="text-gray-300">•</span>
+                                <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4" />
+                                    <span>{document.readingTime} min read</span>
+                                </div>
+                            </>
+                        )}
+                        {document.viewCount !== undefined && document.viewCount > 0 && (
+                            <>
+                                <span className="text-gray-300">•</span>
+                                <div className="flex items-center gap-1 text-green-600">
+                                    <Eye className="w-4 h-4" />
+                                    <span className="font-semibold">{document.viewCount} views</span>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </header>
 

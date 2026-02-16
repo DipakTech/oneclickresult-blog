@@ -8,8 +8,10 @@ export default defineSchema({
         storageId: v.id("_storage"),
         size: v.number(),
         userId: v.optional(v.string()),
+        shareToken: v.optional(v.string()), // For generating shareable links
     })
         .index("by_userId", ["userId"])
+        .index("by_shareToken", ["shareToken"])
         .searchIndex("search_name", {
             searchField: "name",
         }),
@@ -34,6 +36,7 @@ export default defineSchema({
         // Analytics & Tracking
         readingTime: v.optional(v.number()), // Minutes (auto-calculated)
         lastModified: v.optional(v.number()), // Last edit timestamp
+        viewCount: v.optional(v.number()), // Track article views
     })
     .index("by_userId", ["userId"])
     .index("by_slug", ["slug"]), // Index for fast lookup by slug

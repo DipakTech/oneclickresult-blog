@@ -8,11 +8,11 @@
    DESIGN SYSTEM — Light Theme (Default)
    ================================================ */
 :root {
-  /* Primary Blue */
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-light: #DBEAFE;
-  --color-primary-subtle: rgba(37, 99, 235, 0.08);
+  /* Primary Green */
+  --color-primary: #10B981;
+  --color-primary-hover: #059669;
+  --color-primary-light: #D1FAE5;
+  --color-primary-subtle: rgba(16, 185, 129, 0.08);
 
   /* Surfaces */
   --color-bg: #F8FAFC;
@@ -45,10 +45,10 @@
    DESIGN SYSTEM — Dark Theme
    ================================================ */
 [data-theme="dark"] {
-  --color-primary: #3B82F6;
-  --color-primary-hover: #60A5FA;
-  --color-primary-light: rgba(59, 130, 246, 0.15);
-  --color-primary-subtle: rgba(59, 130, 246, 0.1);
+  --color-primary: #10B981;
+  --color-primary-hover: #34D399;
+  --color-primary-light: rgba(16, 185, 129, 0.15);
+  --color-primary-subtle: rgba(16, 185, 129, 0.1);
 
   --color-bg: #0A0A0B;
   --color-bg-secondary: #111113;

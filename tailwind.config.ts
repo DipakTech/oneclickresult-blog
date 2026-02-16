@@ -38,6 +38,7 @@ const config: Config = {
         success: {
           DEFAULT: "#10B981",
           light: "#D1FAE5",
+          dark: "#059669",
         },
         warning: {
           DEFAULT: "#F59E0B",
@@ -46,14 +47,7 @@ const config: Config = {
         danger: {
           DEFAULT: "#EF4444",
           light: "#FEE2E2",
-        },
-        accent: {
-          purple: "#8B5CF6",
-          "purple-light": "#EDE9FE",
-          amber: "#F59E0B",
-          "amber-light": "#FEF3C7",
-          emerald: "#10B981",
-          "emerald-light": "#D1FAE5",
+          dark: "#DC2626",
         },
       },
       fontFamily: {

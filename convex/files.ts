@@ -70,3 +70,42 @@ export const deleteFile = mutation({
         await ctx.db.delete(args.id);
     },
 });
+
+export const generateShareToken = mutation({
+    args: { id: v.id("files") },
+    handler: async (ctx, args) => {
+        const file = await ctx.db.get(args.id);
+        if (!file) {
+            throw new Error("File not found");
+        }
+
+        // Generate a random token
+        const shareToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+        await ctx.db.patch(args.id, {
+            shareToken,
+        });
+
+        return shareToken;
+    },
+});
+
+export const getFileByShareToken = query({
+    args: { shareToken: v.string() },
+    handler: async (ctx, args) => {
+        const file = await ctx.db
+            .query("files")
+            .withIndex("by_shareToken", (q) => q.eq("shareToken", args.shareToken))
+            .first();
+
+        if (!file) return null;
+
+        const url = await ctx.storage.getUrl(file.storageId);
+
+        return {
+            ...file,
+            url,
+        };
+    },
+});
+

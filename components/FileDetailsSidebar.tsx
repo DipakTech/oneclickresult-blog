@@ -7,6 +7,8 @@ import {
   File,
   Download,
   Trash2,
+  Share2,
+  Check,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
@@ -30,8 +32,11 @@ export default function FileDetailsSidebar({
     file ? { storageId: file.storageId } : "skip"
   );
   const deleteFile = useMutation(api.files.deleteFile);
+  const generateShareToken = useMutation(api.files.generateShareToken);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGeneratingShare, setIsGeneratingShare] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleDeleteConfirm = async () => {
     if (!file) return;
@@ -49,12 +54,29 @@ export default function FileDetailsSidebar({
     }
   };
 
+  const handleShare = async () => {
+    if (!file) return;
+    setIsGeneratingShare(true);
+    try {
+      const token = await generateShareToken({ id: file._id });
+      const shareUrl = `${window.location.origin}/share/${token}`;
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to generate share link:", error);
+      alert("Failed to generate share link. Please try again.");
+    } finally {
+      setIsGeneratingShare(false);
+    }
+  };
+
   if (!file) return null;
 
   const getIcon = (type: string) => {
     switch (type) {
       case "image":
-        return <ImageIcon className="w-12 h-12 text-accent-purple" />;
+        return <ImageIcon className="w-12 h-12 text-success" />;
       case "pdf":
         return <FileText className="w-12 h-12 text-danger" />;
       case "csv":
@@ -79,9 +101,9 @@ export default function FileDetailsSidebar({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-4">
         {/* Preview Section */}
-        <div className="bg-bg-secondary rounded-card border border-border flex items-center justify-center min-h-[200px] mb-6 overflow-hidden">
+        <div className="bg-bg-secondary rounded-card border border-border flex items-center justify-center min-h-[160px] mb-5 overflow-hidden">
           {fileUrl ? (
             file.type === "image" ? (
               <img
@@ -143,6 +165,30 @@ export default function FileDetailsSidebar({
           {/* Actions */}
           {fileUrl && (
             <div className="pt-4 space-y-2">
+              <button
+                onClick={handleShare}
+                disabled={isGeneratingShare}
+                className="
+                  flex items-center justify-center gap-2 w-full
+                  h-11 rounded-btn
+                  bg-success text-white text-sm font-semibold
+                  hover:bg-success-dark
+                  transition-colors duration-200
+                  disabled:opacity-70 disabled:cursor-not-allowed
+                "
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4" />
+                    {isGeneratingShare ? "Generating..." : "Share File"}
+                  </>
+                )}
+              </button>
               <a
                 href={fileUrl}
                 target="_blank"
