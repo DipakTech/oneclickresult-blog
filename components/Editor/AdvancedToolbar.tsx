@@ -10,9 +10,6 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  Heading4,
-  Heading5,
-  Heading6,
   List,
   ListOrdered,
   ListChecks,
@@ -24,15 +21,28 @@ import {
   Table as TableIcon,
   Minus,
   Link2,
+  Unlink,
   Highlighter,
   Type,
   Palette,
   Undo2,
   Redo2,
   ChevronDown,
+  Eraser,
+  Subscript,
+  Superscript,
+  Quote,
+  CodeSquare,
+  Trash2,
+  Plus,
+  ArrowDownFromLine,
+  ArrowUpFromLine,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
+  ArrowUpDown,
 } from "lucide-react";
-import { useState } from "react";
-import { FONT_FAMILIES, FONT_SIZES, COLOR_PALETTE } from "../../lib/editorExtensions";
+import { useState, useRef, useEffect } from "react";
+import { FONT_FAMILIES, COLOR_PALETTE, LINE_HEIGHTS } from "../../lib/editorExtensions";
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -40,13 +50,69 @@ interface EditorToolbarProps {
 }
 
 export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarProps) {
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showHighlightPicker, setShowHighlightPicker] = useState(false);
-  const [showFontFamily, setShowFontFamily] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const [linkUrl, setLinkUrl] = useState("");
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const linkInputRef = useRef<HTMLInputElement>(null);
+
+  // Close dropdowns on click outside and on scroll
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      // If clicking inside a dropdown (which is fixed positioned), don't close
+      const target = e.target as HTMLElement;
+      const nearbyDropdown = target.closest('.fixed-dropdown');
+      if (nearbyDropdown) return;
+
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+    
+    const handleScroll = () => {
+       if (activeDropdown) setActiveDropdown(null); // Close on scroll to avoid detached dropdowns
+    };
+
+    globalThis.document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true); // Capture scroll events from any container
+    
+    return () => {
+      globalThis.document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [activeDropdown]);
+
+  // Focus link input when dropdown opens
+  useEffect(() => {
+    if (activeDropdown === "link" && linkInputRef.current) {
+      linkInputRef.current.focus();
+      if (editor?.isActive("link")) {
+        const attrs = editor.getAttributes("link");
+        setLinkUrl(attrs.href || "");
+      } else {
+        setLinkUrl("");
+      }
+    }
+  }, [activeDropdown]);
 
   if (!editor) {
     return null;
   }
+
+  const toggleDropdown = (name: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (activeDropdown === name) {
+      setActiveDropdown(null);
+      setDropdownPosition(null);
+    } else {
+      const button = event.currentTarget;
+      const rect = button.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 5,
+        left: rect.left,
+      });
+      setActiveDropdown(name);
+    }
+  };
 
   const ToolbarButton = ({
     onClick,
@@ -55,7 +121,7 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
     children,
     title,
   }: {
-    onClick: () => void;
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
     isActive?: boolean;
     disabled?: boolean;
     children: React.ReactNode;
@@ -66,7 +132,7 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
       disabled={disabled}
       title={title}
       className={`
-        p-2 rounded-lg transition-all duration-150
+        p-1.5 rounded-md transition-all duration-150 shrink-0
         ${isActive
           ? "bg-primary/10 text-primary ring-1 ring-primary/20"
           : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
@@ -79,14 +145,51 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
   );
 
   const ToolbarDivider = () => (
-    <div className="w-px h-6 bg-border mx-1" />
+    <div className="w-px h-5 bg-border mx-0.5 shrink-0" />
   );
 
+  const handleSetLink = () => {
+    if (linkUrl) {
+      const url = linkUrl.startsWith("http") ? linkUrl : `https://${linkUrl}`;
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+    setActiveDropdown(null);
+    setLinkUrl("");
+  };
+
+  const handleRemoveLink = () => {
+    editor.chain().focus().unsetLink().run();
+    setActiveDropdown(null);
+    setLinkUrl("");
+  };
+
+  // Helper to render fixed dropdown content
+  const DropdownContent = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => {
+    if (!dropdownPosition) return null;
+    
+    // Adjust horizontal position if it overflows screen
+    // Simple check: if left + 200 > window.innerWidth, shift left
+    let left = dropdownPosition.left;
+    if (typeof window !== 'undefined' && left + 220 > window.innerWidth) {
+        left = window.innerWidth - 230; // 220 + padding
+    }
+
+    return (
+      <div 
+        className={`fixed z-50 bg-surface border border-border rounded-lg shadow-xl fixed-dropdown ${className}`}
+        style={{ top: dropdownPosition.top, left: left }}
+      >
+        {children}
+      </div>
+    );
+  };
+
   return (
-    <div className="sticky top-16 z-30 bg-surface/95 backdrop-blur-sm border-b border-border shadow-sm">
-      <div className="flex flex-wrap items-center gap-1 p-2 max-w-full overflow-x-auto">
+    <div ref={toolbarRef} className="sticky top-[72px] z-40 bg-surface/95 backdrop-blur-sm border-b border-border shadow-sm">
+      <div className="w-full overflow-x-auto no-scrollbar">
+        <div className="w-fit mx-auto flex items-center gap-0.5 p-1.5">
         {/* Undo/Redo */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
@@ -105,46 +208,91 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
 
         <ToolbarDivider />
 
-        {/* Font Family */}
-        <div className="relative">
-          <button
-            onClick={() => setShowFontFamily(!showFontFamily)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-secondary hover:text-text-primary transition-colors"
-            title="Font Family"
-          >
-            <Type className="w-4 h-4" />
-            <span className="hidden sm:inline">Font</span>
-            <ChevronDown className="w-3 h-3" />
-          </button>
-          {showFontFamily && (
-            <div className="absolute top-full left-0 mt-1 w-48 bg-surface border border-border rounded-lg shadow-xl z-50">
-              <div className="p-1 max-h-64 overflow-y-auto">
-                {FONT_FAMILIES.map((font) => (
-                  <button
-                    key={font.value}
-                    onClick={() => {
-                      if (font.value) {
-                        editor.chain().focus().setFontFamily(font.value).run();
-                      } else {
-                        editor.chain().focus().unsetFontFamily().run();
-                      }
-                      setShowFontFamily(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded text-sm hover:bg-bg-secondary transition-colors"
-                    style={{ fontFamily: font.value || undefined }}
-                  >
-                    {font.label}
-                  </button>
-                ))}
-              </div>
+        {/* Font Family Dropdown */}
+        <button
+          onClick={(e) => toggleDropdown("font", e)}
+          className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-xs transition-colors shrink-0 ${
+            activeDropdown === "font"
+              ? "bg-primary/10 text-primary"
+              : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
+          }`}
+          title="Font Family"
+        >
+          <Type className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline max-w-[60px] truncate">
+            {FONT_FAMILIES.find(f => editor.isActive('textStyle', { fontFamily: f.value }))?.label || "Font"}
+          </span>
+          <ChevronDown className="w-3 h-3" />
+        </button>
+        {activeDropdown === "font" && (
+          <DropdownContent className="w-48">
+            <div className="p-1 max-h-64 overflow-y-auto">
+              {FONT_FAMILIES.map((font) => (
+                <button
+                  key={font.value}
+                  onClick={() => {
+                    if (font.value) {
+                      editor.chain().focus().setFontFamily(font.value).run();
+                    } else {
+                      editor.chain().focus().unsetFontFamily().run();
+                    }
+                    setActiveDropdown(null);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
+                     editor.isActive('textStyle', { fontFamily: font.value }) 
+                     ? "bg-primary/10 text-primary" 
+                     : "hover:bg-bg-secondary text-text-primary"
+                  }`}
+                  style={{ fontFamily: font.value || undefined }}
+                >
+                  {font.label}
+                </button>
+              ))}
             </div>
-          )}
-          </div>
+          </DropdownContent>
+        )}
+
+        {/* Line Height Dropdown */}
+        <button
+          onClick={(e) => toggleDropdown("lineHeight", e)}
+          className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-xs transition-colors shrink-0 ${
+            activeDropdown === "lineHeight"
+              ? "bg-primary/10 text-primary"
+              : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
+          }`}
+          title="Line Height"
+        >
+          <ArrowUpDown className="w-3.5 h-3.5" />
+          <ChevronDown className="w-3 h-3" />
+        </button>
+        {activeDropdown === "lineHeight" && (
+          <DropdownContent className="w-32">
+            <div className="p-1">
+              {LINE_HEIGHTS.map((height) => (
+                <button
+                  key={height.value}
+                  onClick={() => {
+                     // @ts-ignore - setLineHeight is a custom command
+                    editor.chain().focus().setLineHeight(height.value).run();
+                    setActiveDropdown(null);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
+                     editor.isActive({ lineHeight: height.value })
+                     ? "bg-primary/10 text-primary"
+                     : "hover:bg-bg-secondary text-text-primary"
+                  }`}
+                >
+                  {height.label}
+                </button>
+              ))}
+            </div>
+          </DropdownContent>
+        )}
 
         <ToolbarDivider />
 
         {/* Text Formatting */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive("bold")}
@@ -180,88 +328,108 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
           >
             <Code className="w-4 h-4" />
           </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleSubscript().run()}
+            isActive={editor.isActive("subscript")}
+            title="Subscript"
+          >
+            <Subscript className="w-4 h-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleSuperscript().run()}
+            isActive={editor.isActive("superscript")}
+            title="Superscript"
+          >
+            <Superscript className="w-4 h-4" />
+          </ToolbarButton>
         </div>
 
         <ToolbarDivider />
 
         {/* Text Color */}
-        <div className="relative">
-          <ToolbarButton
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            title="Text Color"
-          >
-            <Palette className="w-4 h-4" />
-          </ToolbarButton>
-          {showColorPicker && (
-            <div className="absolute top-full left-0 mt-1 p-2 bg-surface border border-border rounded-lg shadow-xl z-50">
-              <div className="grid grid-cols-5 gap-1">
-                {COLOR_PALETTE.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => {
-                      editor.chain().focus().setColor(color).run();
-                      setShowColorPicker(false);
-                    }}
-                    className="w-8 h-8 rounded border-2 border-border hover:scale-110 transition-transform"
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
-              </div>
-              <button
-                onClick={() => {
-                  editor.chain().focus().unsetColor().run();
-                  setShowColorPicker(false);
-                }}
-                className="w-full mt-2 px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary rounded"
-              >
-                Reset Color
-              </button>
+        <ToolbarButton
+          onClick={(e) => toggleDropdown("color", e)}
+          isActive={activeDropdown === "color"}
+          title="Text Color"
+        >
+          <Palette className="w-4 h-4" />
+        </ToolbarButton>
+        {activeDropdown === "color" && (
+          <DropdownContent className="p-2 w-48">
+            <div className="grid grid-cols-5 gap-1">
+              {COLOR_PALETTE.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => {
+                    editor.chain().focus().setColor(color).run();
+                    setActiveDropdown(null);
+                  }}
+                  className="w-7 h-7 rounded border border-border hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
             </div>
-          )}
-        </div>
+            <button
+              onClick={() => {
+                editor.chain().focus().unsetColor().run();
+                setActiveDropdown(null);
+              }}
+              className="w-full mt-1.5 px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary rounded"
+            >
+              Reset Default
+            </button>
+          </DropdownContent>
+        )}
 
         {/* Highlight */}
-        <div className="relative">
-          <ToolbarButton
-            onClick={() => setShowHighlightPicker(!showHighlightPicker)}
-            title="Highlight"
-          >
-            <Highlighter className="w-4 h-4" />
-          </ToolbarButton>
-          {showHighlightPicker && (
-            <div className="absolute top-full left-0 mt-1 p-2 bg-surface border border-border rounded-lg shadow-xl z-50">
-              <div className="grid grid-cols-5 gap-1">
-                {COLOR_PALETTE.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => {
-                      editor.chain().focus().toggleHighlight({ color }).run();
-                      setShowHighlightPicker(false);
-                    }}
-                    className="w-8 h-8 rounded border-2 border-border hover:scale-110 transition-transform"
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
-              </div>
-              <button
-                onClick={() => {
-                  editor.chain().focus().unsetHighlight().run();
-                  setShowHighlightPicker(false);
-                }}
-                className="w-full mt-2 px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary rounded"
-              >
-                Remove Highlight
-              </button>
+        <ToolbarButton
+          onClick={(e) => toggleDropdown("highlight", e)}
+          isActive={editor.isActive("highlight") || activeDropdown === "highlight"}
+          title="Highlight"
+        >
+          <Highlighter className="w-4 h-4" />
+        </ToolbarButton>
+        {activeDropdown === "highlight" && (
+          <DropdownContent className="p-2 w-48">
+            <div className="grid grid-cols-5 gap-1">
+              {COLOR_PALETTE.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => {
+                    editor.chain().focus().toggleHighlight({ color }).run();
+                    setActiveDropdown(null);
+                  }}
+                  className="w-7 h-7 rounded border border-border hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
             </div>
-          )}
-        </div>
+            <button
+              onClick={() => {
+                editor.chain().focus().unsetHighlight().run();
+                setActiveDropdown(null);
+              }}
+              className="w-full mt-1.5 px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary rounded"
+            >
+              Remove Highlight
+            </button>
+          </DropdownContent>
+        )}
+
+        {/* Clear Formatting */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
+          title="Clear Formatting"
+        >
+          <Eraser className="w-4 h-4" />
+        </ToolbarButton>
 
         <ToolbarDivider />
 
         {/* Headings */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             isActive={editor.isActive("heading", { level: 1 })}
@@ -288,7 +456,7 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
         <ToolbarDivider />
 
         {/* Lists */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive("bulletList")}
@@ -306,7 +474,7 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleTaskList().run()}
             isActive={editor.isActive("taskList")}
-            title="Task List"
+            title="Task List (Checklist)"
           >
             <ListChecks className="w-4 h-4" />
           </ToolbarButton>
@@ -315,7 +483,7 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
         <ToolbarDivider />
 
         {/* Alignment */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <ToolbarButton
             onClick={() => editor.chain().focus().setTextAlign("left").run()}
             isActive={editor.isActive({ textAlign: "left" })}
@@ -349,37 +517,162 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
         <ToolbarDivider />
 
         {/* Insert Elements */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
+          {/* Link */}
+          <ToolbarButton
+            onClick={(e) => toggleDropdown("link", e)}
+            isActive={editor.isActive("link") || activeDropdown === "link"}
+            title="Insert Link (Ctrl+K)"
+          >
+            <Link2 className="w-4 h-4" />
+          </ToolbarButton>
+          {activeDropdown === "link" && (
+            <DropdownContent className="w-72 p-3">
+              <label className="text-xs font-medium text-text-secondary mb-1.5 block">URL</label>
+              <div className="flex gap-1.5">
+                <input
+                  ref={linkInputRef}
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSetLink();
+                    if (e.key === "Escape") setActiveDropdown(null);
+                  }}
+                  placeholder="https://example.com"
+                  className="flex-1 px-2.5 py-1.5 bg-bg border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  onClick={handleSetLink}
+                  className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-md hover:bg-primary-hover transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+              {editor.isActive("link") && (
+                <button
+                  onClick={handleRemoveLink}
+                  className="flex items-center gap-1.5 mt-2 text-xs text-danger hover:text-danger-dark transition-colors"
+                >
+                  <Unlink className="w-3 h-3" />
+                  Remove Link
+                </button>
+              )}
+            </DropdownContent>
+          )}
+
+          {/* Image */}
           <ToolbarButton
             onClick={() => onImageUpload?.()}
             title="Insert Image"
           >
             <ImagePlus className="w-4 h-4" />
           </ToolbarButton>
+
+          {/* Quote */}
           <ToolbarButton
-            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-            title="Insert Table"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            isActive={editor.isActive("blockquote")}
+            title="Quote"
           >
-            <TableIcon className="w-4 h-4" />
+            <Quote className="w-4 h-4" />
           </ToolbarButton>
+
+          {/* Code Block */}
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            isActive={editor.isActive("codeBlock")}
+            title="Code Block"
+          >
+            <CodeSquare className="w-4 h-4" />
+          </ToolbarButton>
+
+          {/* Horizontal Rule */}
           <ToolbarButton
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
             title="Horizontal Line"
           >
             <Minus className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton
-            onClick={() => {
-              const url = window.prompt("Enter URL:");
-              if (url) {
-                editor.chain().focus().setLink({ href: url }).run();
-              }
-            }}
-            isActive={editor.isActive("link")}
-            title="Insert Link"
-          >
-            <Link2 className="w-4 h-4" />
-          </ToolbarButton>
+
+          {/* Table with dropdown for table operations */}
+           <ToolbarButton
+              onClick={(e) => toggleDropdown("table", e)}
+              isActive={editor.isActive("table") || activeDropdown === "table"}
+              title="Table"
+            >
+              <TableIcon className="w-4 h-4" />
+            </ToolbarButton>
+            {activeDropdown === "table" && (
+              <DropdownContent className="w-52 p-1">
+                  {!editor.isActive("table") ? (
+                    <button
+                      onClick={() => {
+                        editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                        setActiveDropdown(null);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-bg-secondary transition-colors text-text-primary"
+                    >
+                      <Plus className="w-4 h-4 text-text-tertiary" />
+                      Insert 3×3 Table
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { editor.chain().focus().addColumnAfter().run(); setActiveDropdown(null); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-bg-secondary transition-colors text-text-primary"
+                      >
+                        <ArrowRightFromLine className="w-3.5 h-3.5 text-text-tertiary" />
+                        Add Column After
+                      </button>
+                      <button
+                        onClick={() => { editor.chain().focus().addColumnBefore().run(); setActiveDropdown(null); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-bg-secondary transition-colors text-text-primary"
+                      >
+                        <ArrowLeftFromLine className="w-3.5 h-3.5 text-text-tertiary" />
+                        Add Column Before
+                      </button>
+                      <button
+                        onClick={() => { editor.chain().focus().addRowAfter().run(); setActiveDropdown(null); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-bg-secondary transition-colors text-text-primary"
+                      >
+                        <ArrowDownFromLine className="w-3.5 h-3.5 text-text-tertiary" />
+                        Add Row After
+                      </button>
+                      <button
+                        onClick={() => { editor.chain().focus().addRowBefore().run(); setActiveDropdown(null); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-bg-secondary transition-colors text-text-primary"
+                      >
+                        <ArrowUpFromLine className="w-3.5 h-3.5 text-text-tertiary" />
+                        Add Row Before
+                      </button>
+                      <div className="my-1 h-px bg-border" />
+                      <button
+                        onClick={() => { editor.chain().focus().deleteColumn().run(); setActiveDropdown(null); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-bg-secondary transition-colors text-danger"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete Column
+                      </button>
+                      <button
+                        onClick={() => { editor.chain().focus().deleteRow().run(); setActiveDropdown(null); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-bg-secondary transition-colors text-danger"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete Row
+                      </button>
+                      <button
+                        onClick={() => { editor.chain().focus().deleteTable().run(); setActiveDropdown(null); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded hover:bg-bg-secondary transition-colors text-danger"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete Table
+                      </button>
+                    </>
+                  )}
+              </DropdownContent>
+            )}
+        </div>
         </div>
       </div>
     </div>

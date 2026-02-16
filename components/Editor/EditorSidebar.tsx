@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Image as ImageIcon, Settings, Tag, Globe } from "lucide-react";
+import { ChevronDown, ChevronRight, Image as ImageIcon, Settings, Tag, Globe, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Doc } from "../../convex/_generated/dataModel";
 
@@ -11,6 +11,8 @@ interface EditorSidebarProps {
   onUpdate: (updates: Partial<Doc<"documents">>) => void;
   onCoverImageUpload: (file: File) => void;
   onCoverImageRemove: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const AccordionItem = ({ title, icon: Icon, children, defaultOpen = false }: any) => {
@@ -36,7 +38,7 @@ const AccordionItem = ({ title, icon: Icon, children, defaultOpen = false }: any
     );
 }
 
-export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, onCoverImageRemove }: EditorSidebarProps) {
+export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, onCoverImageRemove, isOpen, onClose }: EditorSidebarProps) {
   const [localAuthorName, setLocalAuthorName] = useState("");
   const [localAuthorImageUrl, setLocalAuthorImageUrl] = useState("");
   const [localMetaTitle, setLocalMetaTitle] = useState("");
@@ -89,8 +91,8 @@ export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, 
 
   if (!document) return null;
 
-  return (
-    <div className="w-[320px] bg-surface border-l border-border h-[calc(100vh-72px)] overflow-y-auto sticky top-[72px] hidden lg:block">
+  const sidebarContent = (
+    <>
         <AccordionItem title="Status & Visibility" icon={Globe} defaultOpen>
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -254,6 +256,45 @@ export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, 
                 )}
             </div>
         </AccordionItem>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile/Tablet Overlay Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar/Drawer */}
+      <aside
+        className={`
+          fixed top-[72px] right-0 z-50 
+          w-[85vw] sm:w-[400px] lg:w-[320px]
+          bg-surface border-l border-border 
+          h-[calc(100vh-72px)] overflow-y-auto
+          transform transition-transform duration-300 ease-smooth
+          lg:sticky lg:translate-x-0
+          ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+        `}
+      >
+        {/* Mobile Close Button */}
+        <div className="lg:hidden sticky top-0 z-10 bg-surface border-b border-border p-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-text-primary">Settings</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-bg-secondary rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-text-tertiary" />
+          </button>
+        </div>
+
+        {/* Sidebar Content */}
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

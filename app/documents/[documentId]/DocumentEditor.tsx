@@ -4,9 +4,9 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import EditorHeader from "../../../components/Editor/EditorHeader";
-import EditorToolbar from "../../../components/Editor/EditorToolbar";
+import AdvancedToolbar from "../../../components/Editor/AdvancedToolbar";
 import EditorSidebar from "../../../components/Editor/EditorSidebar";
 import { useImageUpload } from "../../../hooks/useImageUpload";
 import { Editor as TipTapEditor } from "@tiptap/react";
@@ -125,6 +125,22 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
         return result?.url || null;
     };
 
+    const addImage = () => {
+        const input = globalThis.document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async () => {
+            if (input.files?.length) {
+                const file = input.files[0];
+                const url = await handleEditorImageUpload(file);
+                if (url && editor) {
+                    editor.chain().focus().setImage({ src: url }).run();
+                }
+            }
+        };
+        input.click();
+    };
+
     if (document === undefined) {
         return (
             <div className="flex items-center justify-center h-screen bg-bg">
@@ -156,7 +172,7 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
             />
 
             {/* 2. Sticky Toolbar (below header) */}
-            <EditorToolbar editor={editor} onImageUpload={handleEditorImageUpload} />
+            <AdvancedToolbar editor={editor} onImageUpload={addImage} />
 
             <div className="flex flex-1 overflow-hidden">
                 {/* 3. Main Content Area */}
@@ -183,14 +199,14 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
                 </main>
 
                 {/* 4. Right Sidebar */}
-                {isSidebarOpen && (
-                    <EditorSidebar 
-                        document={document}
-                        onUpdate={handleSidebarUpdate}
-                        onCoverImageUpload={handleCoverImageUpload}
-                        onCoverImageRemove={handleCoverImageRemove}
-                    />
-                )}
+                <EditorSidebar 
+                    document={document}
+                    onUpdate={handleSidebarUpdate}
+                    onCoverImageUpload={handleCoverImageUpload}
+                    onCoverImageRemove={handleCoverImageRemove}
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
+                />
             </div>
         </div>
     );

@@ -127,8 +127,68 @@ export function getEditorExtensions() {
       width: 2,
     }),
     Gapcursor,
+    LineHeightExtension,
   ];
 }
+
+import { Extension } from "@tiptap/core";
+
+export const LineHeightExtension = Extension.create({
+  name: "lineHeight",
+  addOptions() {
+    return {
+      types: ["heading", "paragraph"],
+      defaultLineHeight: "1.6", // Default tailwind leading-normal
+    };
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          lineHeight: {
+            default: this.options.defaultLineHeight,
+            parseHTML: (element) => element.style.lineHeight || this.options.defaultLineHeight,
+            renderHTML: (attributes) => {
+              if (!attributes.lineHeight) {
+                return {};
+              }
+              return {
+                style: `line-height: ${attributes.lineHeight}`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setLineHeight:
+        (lineHeight: string) =>
+        ({ commands }) => {
+          return this.options.types.every((type: string) =>
+            commands.updateAttributes(type, { lineHeight })
+          );
+        },
+      unsetLineHeight:
+        () =>
+        ({ commands }) => {
+          return this.options.types.every((type: string) =>
+            commands.resetAttributes(type, "lineHeight")
+          );
+        },
+    };
+  },
+});
+
+export const LINE_HEIGHTS = [
+  { label: "Default", value: "1.6" },
+  { label: "Single", value: "1.0" },
+  { label: "1.15", value: "1.15" },
+  { label: "1.5", value: "1.5" },
+  { label: "Double", value: "2.0" },
+] as const;
 
 /**
  * Font family options for the editor
