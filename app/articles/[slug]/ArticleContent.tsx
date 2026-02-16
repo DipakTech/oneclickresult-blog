@@ -8,7 +8,9 @@ import BlogCard from "../../../components/BlogCard"; // Reuse for related
 import dynamic from "next/dynamic";
 import { ArrowLeft, User, Share2, Bookmark } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+
+import ThemeToggle from "../../../components/ThemeToggle";
 
 const Editor = dynamic(() => import("../../../components/Editor"), { ssr: false });
 
@@ -32,9 +34,7 @@ function extractTextFromContent(content: string | undefined): string {
 
 
 import { processContentForTOC } from "../../../lib/toc";
-import { useMemo } from "react";
 
-// ... (imports remain)
 
 export default function ArticleContent({ slug }: { slug: string }) {
     const document = useQuery(api.documents.getArticleBySlug, { slug });
@@ -83,10 +83,14 @@ export default function ArticleContent({ slug }: { slug: string }) {
         .filter(d => d._id !== document._id)
         .slice(0, 3);
 
+    // ... imports (removed)
+
     return (
-        <article className="min-h-screen bg-bg pb-20 font-sans antialiased text-[#2d2d2d]">
+
+        <article className="min-h-screen bg-bg pb-20 font-sans antialiased text-text-primary">
             {/* Nav */}
-            <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-white/80 backdrop-blur-md border-b border-black/5 flex items-center justify-between px-6 transition-all duration-300">
+            <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-surface/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 transition-all duration-300">
+
                 <Link 
                     href="/"
                     className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
@@ -95,6 +99,7 @@ export default function ArticleContent({ slug }: { slug: string }) {
                     Back to Articles
                 </Link>
                 <div className="flex items-center gap-4">
+                     <ThemeToggle />
                      {/* Placeholder for Share/Bookmark */}
                      <button className="p-2 text-text-tertiary hover:text-text-primary hover:bg-black/5 rounded-full transition-all">
                         <Share2 className="w-4 h-4" />
@@ -104,6 +109,7 @@ export default function ArticleContent({ slug }: { slug: string }) {
                      </button>
                 </div>
             </nav>
+
 
             {/* Header */}
             <ArticleHeader 
@@ -126,19 +132,21 @@ export default function ArticleContent({ slug }: { slug: string }) {
                 {/* Center: Content */}
                 <div className="col-span-1 lg:col-span-8 max-w-[720px] mx-auto w-full">
                     <div className="
-                        prose prose-lg max-w-none
-                        text-[20px] leading-[1.8] text-[#2d2d2d]
-                        prose-headings:font-bold prose-headings:text-[#1a1a1a] prose-headings:tracking-tight
+                        prose prose-lg max-w-none dark:prose-invert
+                        text-[20px] leading-[1.8] text-text-primary
+                        prose-headings:font-bold prose-headings:text-text-primary prose-headings:tracking-tight
                         prose-h2:text-[32px] prose-h2:mt-12 prose-h2:mb-6 prose-h2:leading-[1.3]
                         prose-h3:text-[24px] prose-h3:mt-8 prose-h3:mb-4
-                        prose-p:mb-8 prose-p:leading-[1.8]
+                        prose-p:mb-8 prose-p:leading-[1.8] prose-p:text-text-primary
                         prose-a:text-primary prose-a:no-underline prose-a:border-b prose-a:border-primary/30 hover:prose-a:border-primary prose-a:transition-all
                         prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-bg-secondary/50 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg prose-blockquote:italic prose-blockquote:text-text-secondary
                         prose-img:rounded-xl prose-img:shadow-lg prose-img:my-10
                         prose-code:text-primary prose-code:bg-primary/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-[0.9em] prose-code:font-medium
                         prose-pre:bg-[#1e1e1e] prose-pre:text-gray-200 prose-pre:p-6 prose-pre:rounded-xl prose-pre:shadow-sm prose-pre:my-8
-                        prose-li:my-2
+                        prose-li:my-2 prose-li:text-text-primary
+
                         marker:text-primary
+
                     ">
                         <Editor
                             documentId={document._id}

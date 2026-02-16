@@ -119,8 +119,93 @@ const config: Config = {
       maxWidth: {
         "content": "1400px",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+            color: 'var(--color-text-primary)',
+            '[class~="lead"]': {
+              color: 'var(--color-text-secondary)',
+            },
+            a: {
+              color: 'var(--color-primary)',
+              '&:hover': {
+                color: 'var(--color-primary-hover)',
+              },
+            },
+            strong: {
+              color: 'var(--color-text-primary)',
+            },
+            'h1, h2, h3, h4': {
+              color: 'var(--color-text-primary)',
+              fontWeight: '700',
+            },
+            code: {
+              color: 'var(--color-primary)',
+              backgroundColor: 'var(--color-primary-subtle)',
+              borderRadius: '0.25rem',
+              paddingLeft: '0.25rem',
+              paddingRight: '0.25rem',
+            },
+            'code::before': {
+              content: '""',
+            },
+            'code::after': {
+              content: '""',
+            },
+            blockquote: {
+              borderLeftColor: 'var(--color-primary)',
+              color: 'var(--color-text-secondary)',
+            },
+          },
+        },
+        invert: {
+          css: {
+            '--tw-prose-body': 'var(--color-text-primary)',
+            '--tw-prose-headings': 'var(--color-text-primary)',
+            '--tw-prose-lead': 'var(--color-text-secondary)',
+            '--tw-prose-links': 'var(--color-primary)',
+            '--tw-prose-bold': 'var(--color-text-primary)',
+            '--tw-prose-counters': 'var(--color-text-secondary)',
+            '--tw-prose-bullets': 'var(--color-text-secondary)',
+            '--tw-prose-hr': 'var(--color-border)',
+            '--tw-prose-quotes': 'var(--color-text-primary)',
+            '--tw-prose-quote-borders': 'var(--color-primary)',
+            '--tw-prose-captions': 'var(--color-text-secondary)',
+            '--tw-prose-code': 'var(--color-primary)',
+            '--tw-prose-pre-code': 'var(--color-text-primary)',
+            '--tw-prose-pre-bg': '#1e1e1e',
+            '--tw-prose-th-borders': 'var(--color-border)',
+            '--tw-prose-td-borders': 'var(--color-border)',
+            
+            color: 'var(--color-text-primary)',
+            'h1, h2, h3, h4': {
+              color: 'var(--color-text-primary)',
+            },
+            strong: {
+              color: 'var(--color-text-primary)',
+            },
+            a: {
+              color: 'var(--color-primary)',
+              '&:hover': {
+                color: 'var(--color-primary-hover)',
+              },
+            },
+            blockquote: {
+              borderLeftColor: 'var(--color-primary)',
+              color: 'var(--color-text-primary)',
+            },
+            code: {
+              color: 'var(--color-primary)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            },
+          },
+        },
+
+      },
     },
   },
+
   plugins: [
     require('@tailwindcss/typography'),
   ],

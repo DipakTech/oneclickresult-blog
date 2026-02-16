@@ -5,6 +5,8 @@ import { api } from "../convex/_generated/api";
 import BlogCard from "../components/BlogCard";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, ChevronDown, Newspaper, BookOpen } from "lucide-react";
+import ThemeToggle from "../components/ThemeToggle";
+
 
 const POSTS_PER_PAGE = 9;
 
@@ -77,18 +79,30 @@ export default function BlogHomePage() {
     <div className="min-h-screen bg-bg">
       {/* Hero Section */}
       <header className="relative z-10">
-
         {/* Subtle background pattern */}
         <div className="absolute inset-0 bg-surface" />
         <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, var(--color-text-primary) 1px, transparent 0)`,
-            backgroundSize: "32px 32px",
-          }}
-        />
+          className="absolute inset-x-0 -bottom-40 -top-40 overflow-hidden blur-3xl opacity-50"
+          aria-hidden="true"
+        >
+          <div className="relative aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
+        </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+          {/* Top Nav placeholder */}
+          <nav className="flex items-center justify-between mb-16">
+            <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
+              Dipak.
+            </div>
+            <div className="flex items-center gap-4">
+               {/* Other nav items could go here */}
+               <ThemeToggle />
+               {/* <a href="/dashboard" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+                  Dashboard
+               </a> */}
+            </div>
+          </nav>
+
           {/* Breadcrumb */}
           <nav
             className="flex items-center gap-2 text-xs font-medium text-text-tertiary mb-10 tracking-wide uppercase"
