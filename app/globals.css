@@ -82,16 +82,24 @@
 }
 
 /* Opt out for animations / transforms */
-*::before, *::after,
-input, textarea, select, button,
+*::before,
+*::after,
+input,
+textarea,
+select,
+button,
 [class*="animate-"],
 [class*="transition-"] {
   transition-property: none;
 }
 
 /* Re-enable for interactive elements */
-a, button, [role="button"],
-input, textarea, select,
+a,
+button,
+[role="button"],
+input,
+textarea,
+select,
 [class*="hover:"],
 [class*="transition-"] {
   transition-property: background-color, border-color, color, box-shadow, transform, opacity;
@@ -101,7 +109,10 @@ input, textarea, select,
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+  /* Offset for fixed header (64px) + padding */
 }
+
 
 body {
   background-color: var(--color-bg);
@@ -118,13 +129,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--scrollbar-bg);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 }
@@ -148,12 +162,10 @@ a:focus:not(:focus-visible) {
    ================================================ */
 @layer utilities {
   .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      var(--color-surface) 25%,
-      var(--color-bg-secondary) 37%,
-      var(--color-surface) 63%
-    );
+    background: linear-gradient(90deg,
+        var(--color-surface) 25%,
+        var(--color-bg-secondary) 37%,
+        var(--color-surface) 63%);
     background-size: 200% 100%;
     animation: shimmer 2s infinite linear;
   }
@@ -166,8 +178,9 @@ a:focus:not(:focus-visible) {
 
   .hover-lift {
     transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
+
   .hover-lift:hover {
     transform: translateY(-2px);
   }

@@ -23,8 +23,35 @@ import { Focus } from "@tiptap/extension-focus";
 import { Dropcursor } from "@tiptap/extension-dropcursor";
 import { Gapcursor } from "@tiptap/extension-gapcursor";
 import { common, createLowlight } from "lowlight";
+import { Extension } from "@tiptap/core";
 
 const lowlight = createLowlight(common);
+
+export const HeadingIdExtension = Extension.create({
+  name: "headingId",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["heading"],
+        attributes: {
+          id: {
+            default: null,
+            parseHTML: (element) => element.id,
+            renderHTML: (attributes) => {
+              if (!attributes.id) {
+                return {};
+              }
+              return {
+                id: attributes.id,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
 
 /**
  * Get the complete set of Tiptap extensions for the advanced editor
@@ -128,12 +155,15 @@ export function getEditorExtensions() {
     }),
     Gapcursor,
     LineHeightExtension,
+    HeadingIdExtension,
   ];
 }
 
-import { Extension } from "@tiptap/core";
+
+// import { Extension } from "@tiptap/core"; // already imported above
 
 export const LineHeightExtension = Extension.create({
+
   name: "lineHeight",
   addOptions() {
     return {
