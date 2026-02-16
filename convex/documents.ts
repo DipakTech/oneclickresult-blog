@@ -45,12 +45,26 @@ export const createDocument = mutation({
         authorImageUrl: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        let slug = generateSlug(args.title);
+        
+        // Ensure uniqueness
+        const existingSlug = await ctx.db
+            .query("documents")
+            .withIndex("by_slug", (q) => q.eq("slug", slug))
+            .first();
+
+        if (existingSlug) {
+            slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+        }
+
         const documentId = await ctx.db.insert("documents", {
             title: args.title,
             isPublished: false,
             authorName: args.authorName,
             authorImageUrl: args.authorImageUrl,
             viewCount: 0,
+            slug: slug,
+            metaDescription: "", // Initialize with empty string
         });
         return documentId;
     },

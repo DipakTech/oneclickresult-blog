@@ -1,7 +1,12 @@
 import { Metadata } from 'next';
 import ArticleContent from './ArticleContent';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../convex/_generated/api";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+
+const client = convexUrl ? new ConvexHttpClient(convexUrl) : null;
 
 type Props = {
     params: Promise<{ slug: string }>;
@@ -11,16 +16,37 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     
-    // For now, we'll use default metadata
-    // In production, you'd fetch the article data here using Convex HTTP API
-    const title = `Article | My Blog`;
-    const description = 'Read our latest article on technology and development.';
+    // Fetch article data using Convex HTTP API
+    let article = null;
+    if (client) {
+        try {
+             article = await client.query(api.documents.getArticleBySlug, { slug });
+        } catch (error) {
+             console.error("Error fetching article metadata:", error);
+        }
+    }
+
+    if (!article) {
+         return {
+            title: 'Article Not Found',
+            description: 'The requested article could not be found.',
+         };
+    }
+
+    const title = article.metaTitle || article.title;
+    const description = article.metaDescription || 'Read our latest article.';
     
+    // Construct dynamic OG image URL
+    const ogImageUrl = new URL(`${baseUrl}/api/og`);
+    ogImageUrl.searchParams.set('title', title);
+    ogImageUrl.searchParams.set('description', description);
+    const ogImageString = ogImageUrl.toString();
+
     return {
         title,
         description,
-        keywords: ['blog', 'article', 'developer', 'technology'],
-        authors: [{ name: 'Blog Author' }],
+        keywords: article.metaKeywords || ['blog', 'article'],
+        authors: [{ name: article.authorName || 'Blog Author' }],
         openGraph: {
             title,
             description,
@@ -29,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             type: 'article',
             images: [
                 {
-                    url: `${baseUrl}/og-default.png`,
+                    url: ogImageString,
                     width: 1200,
                     height: 630,
                     alt: title,
@@ -40,14 +66,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             card: 'summary_large_image',
             title,
             description,
-            images: [`${baseUrl}/og-default.png`],
+            images: [ogImageString],
         },
         robots: {
             index: true,
             follow: true,
         },
         alternates: {
-            canonical: `${baseUrl}/articles/${slug}`,
+            canonical: article.canonicalUrl || `${baseUrl}/articles/${slug}`,
         },
     };
 }

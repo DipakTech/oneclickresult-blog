@@ -6,26 +6,19 @@ export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // Define public paths that don't need authentication
-  const publicPaths = ["/articles", "/api/auth"];
+  const publicPaths = ["/articles", "/api/auth", "/api/og"];
   
-  // Check if path starts with any public path
-  const isPublic = publicPaths.some(p => path.startsWith(p)) || path === "/favicon.ico";
+  // Check if path starts with any public path OR is the root path
+  const isPublic = path === "/" || publicPaths.some(p => path.startsWith(p)) || path === "/favicon.ico";
 
   // If it's a public path, allow access
   if (isPublic) {
     return NextResponse.next();
   }
 
-  // Define protected paths (including root for document management)
-  // We explicitly protect these to be safe, or we could default to protected except public
-  // Given the user request: Protect root (document management), but allows articles
-  // Strategy: If it's NOT public, it's protected.
-  
-  // However, verifying if we want to protect EVERYTHING else or just specific routes.
-  // User said: "protect localhost:3001 route for document management but not articles"
-  // This implies default deny (whitelist public routes).
-  
-  const isProtected = true; // Default to protected for everything else (including /)
+  // Define protected paths
+  // We want to protect /dashboard and anything else that isn't public
+  const isProtected = true; 
 
   if (!isProtected) {
     return NextResponse.next();
@@ -47,7 +40,6 @@ export async function middleware(req: NextRequest) {
     const loginUrl = new URL(`${mainDomain}/auth/signin`);
     
     // Set callback URL to the current page on the blog
-    // We derive the public URL from headers to avoid internal Docker hostnames (0.0.0.0)
     const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "blog.oneclickresult.com";
     const protocol = req.headers.get("x-forwarded-proto") || "https";
     const currentUrl = `${protocol}://${host}${path}`;
