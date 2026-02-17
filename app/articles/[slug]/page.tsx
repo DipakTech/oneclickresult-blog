@@ -3,7 +3,7 @@ import ArticleContent from './ArticleContent';
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../convex/_generated/api";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.oneclickresult.com';
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
 const client = convexUrl ? new ConvexHttpClient(convexUrl) : null;
