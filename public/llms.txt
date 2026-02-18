@@ -1,0 +1,14 @@
+# My Blog - Insightful Articles on Development & Technology
+
+> A modern blog platform featuring articles on software development, technology trends, and developer insights.
+
+## Navigation
+
+- [Home](https://blog.oneclickresult.com)
+- [Articles](https://blog.oneclickresult.com/articles)
+- [Sitemap](https://blog.oneclickresult.com/sitemap.xml)
+
+## Content
+
+Content is focused on software development, coding tutorials, and tech news.
+For a complete list of pages and articles, please refer to the Sitemap.
