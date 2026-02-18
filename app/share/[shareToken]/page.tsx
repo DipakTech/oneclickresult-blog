@@ -51,7 +51,8 @@ export default function SharePage() {
     (type === "other" && /\.(jpg|jpeg|png|gif|webp)$/i.test(name));
   const isPdf = type === "pdf" || (type === "other" && /\.pdf$/i.test(name));
   const isVideo =
-    type === "video" || (type === "other" && /\.(mp4|webm|ogg)$/i.test(name));
+    (type as string) === "video" ||
+    (type === "other" && /\.(mp4|webm|ogg)$/i.test(name));
 
   // Format file size
   const formattedSize = size

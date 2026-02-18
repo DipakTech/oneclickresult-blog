@@ -102,7 +102,7 @@ export default function FileDetailsSidebar({
 
   const isVideo = (file: Doc<"files">) => {
     return (
-      file.type === "video" ||
+      (file.type as string) === "video" ||
       (file.type === "other" && /\.(mp4|webm|ogg)$/i.test(file.name))
     );
   };
