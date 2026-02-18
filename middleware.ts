@@ -6,10 +6,31 @@ export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // Define public paths that don't need authentication
-  const publicPaths = ["/articles", "/api/auth", "/api/og"];
-  
-  // Check if path starts with any public path OR is the root path
-  const isPublic = path === "/" || publicPaths.some(p => path.startsWith(p)) || path === "/favicon.ico";
+  const publicPaths = [
+    "/articles",
+    "/api/auth",
+    "/api/og",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/llms.txt",
+    "/manifest.json",
+    "/share"
+  ];
+
+  const publicFiles = [
+    "/favicon.ico",
+    "/favicon-16x16.png",
+    "/favicon-32x32.png",
+    "/apple-touch-icon.png",
+    "/android-chrome-192x192.png",
+    "/android-chrome-512x512.png",
+  ];
+
+  // Check if path starts with any public path OR is the root path OR matches a public file
+  const isPublic =
+    path === "/" ||
+    publicPaths.some((p) => path.startsWith(p)) ||
+    publicFiles.includes(path);
 
   // If it's a public path, allow access
   if (isPublic) {
@@ -18,7 +39,7 @@ export async function middleware(req: NextRequest) {
 
   // Define protected paths
   // We want to protect /dashboard and anything else that isn't public
-  const isProtected = true; 
+  const isProtected = true;
 
   if (!isProtected) {
     return NextResponse.next();
@@ -36,15 +57,19 @@ export async function middleware(req: NextRequest) {
   if (!token) {
     // Redirect to main domain logic
     // We construct the login URL pointing to the main domain
-    const mainDomain = process.env.NEXT_PUBLIC_MAIN_DOMAIN_URL || "http://localhost:3000";
+    const mainDomain =
+      process.env.NEXT_PUBLIC_MAIN_DOMAIN_URL || "http://localhost:3000";
     const loginUrl = new URL(`${mainDomain}/auth/signin`);
-    
+
     // Set callback URL to the current page on the blog
-    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "blog.oneclickresult.com";
+    const host =
+      req.headers.get("x-forwarded-host") ||
+      req.headers.get("host") ||
+      "blog.oneclickresult.com";
     const protocol = req.headers.get("x-forwarded-proto") || "https";
     const currentUrl = `${protocol}://${host}${path}`;
     loginUrl.searchParams.set("callbackUrl", currentUrl);
-    
+
     return NextResponse.redirect(loginUrl);
   }
 

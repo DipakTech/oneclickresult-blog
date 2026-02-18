@@ -7,6 +7,7 @@ import FileUploader from "../../components/FileUploader";
 import { useState } from "react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { LayoutGrid, List as ListIcon, Upload } from "lucide-react";
+import FileDetailsSidebar from "../../components/FileDetailsSidebar";
 
 export default function MediaPage() {
     const [selectedFile, setSelectedFile] = useState<Doc<"files"> | null>(null);
@@ -70,6 +71,14 @@ export default function MediaPage() {
                     </div>
                 </main>
             </div>
+            {/* File Details Sidebar - Right Side */}
+            {selectedFile && (
+                <FileDetailsSidebar
+                    file={selectedFile}
+                    onClose={() => setSelectedFile(null)}
+                    onDelete={() => setSelectedFile(null)}
+                />
+            )}
         </div>
     );
 }

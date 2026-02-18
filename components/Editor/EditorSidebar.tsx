@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, Image as ImageIcon, Settings, Tag, Globe, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Doc } from "../../convex/_generated/dataModel";
+import { useSession } from "next-auth/react";
 
 interface ExtendedDoc extends Doc<"documents"> {
   coverImageUrl?: string | null;
@@ -22,6 +23,7 @@ const AccordionItem = ({ title, icon: Icon, children, defaultOpen = false }: any
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between p-4 bg-surface hover:bg-bg-secondary transition-colors"
+                type="button"
             >
                 <div className="flex items-center gap-2 text-sm font-medium text-text-primary">
                     <Icon className="w-4 h-4 text-text-tertiary" />
@@ -39,6 +41,7 @@ const AccordionItem = ({ title, icon: Icon, children, defaultOpen = false }: any
 }
 
 export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, onCoverImageRemove, isOpen, onClose }: EditorSidebarProps) {
+  const { data: session } = useSession();
   const [localAuthorName, setLocalAuthorName] = useState("");
   const [localAuthorImageUrl, setLocalAuthorImageUrl] = useState("");
   const [localMetaTitle, setLocalMetaTitle] = useState("");
@@ -48,13 +51,13 @@ export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, 
   // Sync local state with document when it changes
   useEffect(() => {
     if (document) {
-      setLocalAuthorName(document.authorName || "");
-      setLocalAuthorImageUrl(document.authorImageUrl || "");
+      setLocalAuthorName(document.authorName || session?.user?.name || "");
+      setLocalAuthorImageUrl(document.authorImageUrl || session?.user?.image || "");
       setLocalMetaTitle(document.metaTitle || "");
       setLocalMetaDescription(document.metaDescription || "");
       setLocalFocusKeyphrase(document.focusKeyphrase || "");
     }
-  }, [document?._id]); // Only reset when document ID changes
+  }, [document?._id, session]); // Only reset when document ID changes or session loads
 
   // Debounce timer for author fields
   useEffect(() => {
@@ -272,7 +275,7 @@ export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, 
       {/* Sidebar/Drawer */}
       <aside
         className={`
-          fixed top-[72px] right-0 z-50 
+          fixed top-[72px] right-0 z-20 
           w-[85vw] sm:w-[400px] lg:w-[320px]
           bg-surface border-l border-border 
           h-[calc(100vh-72px)] overflow-y-auto

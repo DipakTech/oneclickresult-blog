@@ -29,7 +29,7 @@ export default function FileDetailsSidebar({
 }: FileDetailsSidebarProps) {
   const fileUrl = useQuery(
     api.files.getFileUrl,
-    file ? { storageId: file.storageId } : "skip"
+    file ? { storageId: file.storageId } : "skip",
   );
   const deleteFile = useMutation(api.files.deleteFile);
   const generateShareToken = useMutation(api.files.generateShareToken);
@@ -86,6 +86,27 @@ export default function FileDetailsSidebar({
     }
   };
 
+  const isImage = (file: Doc<"files">) => {
+    return (
+      file.type === "image" ||
+      (file.type === "other" && /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
+    );
+  };
+
+  const isPdf = (file: Doc<"files">) => {
+    return (
+      file.type === "pdf" ||
+      (file.type === "other" && /\.pdf$/i.test(file.name))
+    );
+  };
+
+  const isVideo = (file: Doc<"files">) => {
+    return (
+      file.type === "video" ||
+      (file.type === "other" && /\.(mp4|webm|ogg)$/i.test(file.name))
+    );
+  };
+
   return (
     <aside className="w-80 bg-surface border-l border-border h-full flex flex-col animate-fade-in z-10">
       {/* Header */}
@@ -105,11 +126,23 @@ export default function FileDetailsSidebar({
         {/* Preview Section */}
         <div className="bg-bg-secondary rounded-card border border-border flex items-center justify-center min-h-[160px] mb-5 overflow-hidden">
           {fileUrl ? (
-            file.type === "image" ? (
+            isImage(file) ? (
               <img
                 src={fileUrl}
                 alt={file.name}
                 className="max-w-full max-h-[300px] object-contain"
+              />
+            ) : isPdf(file) ? (
+              <iframe
+                src={`${fileUrl}#toolbar=0`}
+                className="w-full h-[300px]"
+                title={file.name}
+              />
+            ) : isVideo(file) ? (
+              <video
+                src={fileUrl}
+                controls
+                className="max-w-full max-h-[300px]"
               />
             ) : (
               <div className="flex flex-col items-center py-8">
