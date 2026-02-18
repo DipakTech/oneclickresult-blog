@@ -2,7 +2,7 @@
 
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "../../../components/Sidebar";
 import Header from "../../../components/Header";
@@ -23,6 +23,14 @@ import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
 export default function ArticlesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ArticlesContent />
+    </Suspense>
+  );
+}
+
+function ArticlesContent() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "published" | "draft">("all");
