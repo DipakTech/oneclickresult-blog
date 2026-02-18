@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Plus,
@@ -25,6 +25,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const documents = useQuery(api.documents.getDocuments, {});
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [isCreating, setIsCreating] = useState(false);
 
@@ -34,7 +35,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     if (isCreating) return;
     setIsCreating(true);
     try {
-      const documentId = await createDocument({ 
+      const documentId = await createDocument({
         title: "Untitled Post",
         authorName: session?.user?.name || undefined,
         authorImageUrl: session?.user?.image || undefined,
@@ -55,9 +56,9 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   };
 
   const navItems = [
-    { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { path: "/articles", icon: Newspaper, label: "All Articles" },
-    { path: "/drafts", icon: FileText, label: "Drafts", badge: draftCount },
+    // { path: "/", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/dashboard/articles", icon: Newspaper, label: "All Articles" },
     { path: "/media", icon: ImageIcon, label: "Media Library" },
   ];
 
@@ -134,7 +135,26 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             Menu
           </p>
           {navItems.map((item) => {
-            const isActive = pathname === item.path;
+            const isActive = (() => {
+              if (item.path.includes("?")) {
+                const [path, query] = item.path.split("?");
+                const params = new URLSearchParams(query);
+                const currentParam = searchParams?.get("filter"); // safely access searchParams
+                return (
+                  pathname === path && currentParam === params.get("filter")
+                );
+              }
+              // For paths without query params, ensure we're not on a filtered view if it's the exact path match
+              // e.g. /dashboard/articles (All) vs /dashboard/articles?filter=draft
+              if (item.path === "/dashboard/articles") {
+                const currentParam = searchParams?.get("filter");
+                return (
+                  pathname === item.path &&
+                  (!currentParam || currentParam === "all")
+                );
+              }
+              return pathname === item.path;
+            })();
             const Icon = item.icon;
             return (
               <button
@@ -156,21 +176,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   }`}
                 />
                 <span className="flex-1 text-left">{item.label}</span>
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span
-                    className={`
-                    min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold
-                    flex items-center justify-center
-                    ${
-                      isActive
-                        ? "bg-primary text-white"
-                        : "bg-bg-secondary text-text-tertiary"
-                    }
-                  `}
-                  >
-                    {item.badge}
-                  </span>
-                )}
               </button>
             );
           })}
