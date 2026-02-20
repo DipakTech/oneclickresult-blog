@@ -27,7 +27,7 @@ export default function EditorHeader({
         {/* Left: Back + Title + Status */}
         <div className="flex items-center gap-4 flex-1">
           <Link
-            href="/articles"
+            href="/dashboard"
             className="p-2 text-text-tertiary hover:text-text-primary hover:bg-bg-secondary rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />

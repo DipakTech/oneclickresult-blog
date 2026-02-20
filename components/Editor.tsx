@@ -42,7 +42,7 @@ export default function Editor({ documentId, initialContent, editable = true, on
     },
     editorProps: {
       attributes: {
-        class: "focus:outline-none max-w-full min-h-[300px] prose prose-lg max-w-none",
+        class: "focus:outline-none max-w-full min-h-[300px] prose prose-lg dark:prose-invert max-w-none",
       },
       handleDrop: (view, event, slice, moved) => {
         if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
@@ -127,7 +127,7 @@ export default function Editor({ documentId, initialContent, editable = true, on
 
       <EditorContent 
         editor={editor}
-        className="prose prose-lg max-w-none focus:outline-none min-h-[500px] px-4 py-6"
+        className="prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[500px] px-4 py-6"
       />
 
       {/* Status Bar - Word/Character Count */}
