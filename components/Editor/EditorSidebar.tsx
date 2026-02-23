@@ -275,7 +275,7 @@ export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, 
       {/* Sidebar/Drawer */}
       <aside
         className={`
-          fixed top-[72px] right-0 z-20 
+          fixed top-[72px] right-0 z-50 
           bg-surface border-l border-border 
           h-[calc(100vh-72px)] overflow-y-auto
           transform transition-all duration-300 ease-smooth
