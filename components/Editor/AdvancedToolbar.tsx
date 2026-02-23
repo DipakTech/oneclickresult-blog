@@ -56,29 +56,22 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
   const toolbarRef = useRef<HTMLDivElement>(null);
   const linkInputRef = useRef<HTMLInputElement>(null);
 
-  // Close dropdowns on click outside and on scroll
+  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       // If clicking inside a dropdown (which is fixed positioned), don't close
       const target = e.target as HTMLElement;
-      const nearbyDropdown = target.closest('.fixed-dropdown');
-      if (nearbyDropdown) return;
+      if (typeof target?.closest === 'function' && target.closest('.fixed-dropdown')) return;
 
       if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
         setActiveDropdown(null);
       }
     };
-    
-    const handleScroll = () => {
-       if (activeDropdown) setActiveDropdown(null); // Close on scroll to avoid detached dropdowns
-    };
 
     globalThis.document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("scroll", handleScroll, true); // Capture scroll events from any container
     
     return () => {
       globalThis.document.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("scroll", handleScroll, true);
     };
   }, [activeDropdown]);
 
@@ -107,7 +100,7 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
       const button = event.currentTarget;
       const rect = button.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + 5,
+        top: rect.bottom + 4,
         left: rect.left,
       });
       setActiveDropdown(name);
@@ -168,16 +161,22 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
     if (!dropdownPosition) return null;
     
     // Adjust horizontal position if it overflows screen
-    // Simple check: if left + 200 > window.innerWidth, shift left
     let left = dropdownPosition.left;
     if (typeof window !== 'undefined' && left + 220 > window.innerWidth) {
         left = window.innerWidth - 230; // 220 + padding
     }
 
+    // Since AdvancedToolbar has backdrop-blur which creates a new containing block
+    // for fixed positioned descendants, we must account for the toolbar's own offset 
+    // to map the viewport coordinates back to the local coordinate space.
+    const toolbarRect = toolbarRef.current?.getBoundingClientRect();
+    const toolbarOffsetTop = toolbarRect ? toolbarRect.top : 0;
+    const toolbarOffsetLeft = toolbarRect ? toolbarRect.left : 0;
+
     return (
       <div 
         className={`fixed z-50 bg-surface border border-border rounded-lg shadow-xl fixed-dropdown ${className}`}
-        style={{ top: dropdownPosition.top, left: left }}
+        style={{ top: dropdownPosition.top - toolbarOffsetTop, left: left - toolbarOffsetLeft }}
       >
         {children}
       </div>

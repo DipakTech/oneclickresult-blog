@@ -276,12 +276,14 @@ export default function EditorSidebar({ document, onUpdate, onCoverImageUpload, 
       <aside
         className={`
           fixed top-[72px] right-0 z-20 
-          w-[85vw] sm:w-[400px] lg:w-[320px]
           bg-surface border-l border-border 
           h-[calc(100vh-72px)] overflow-y-auto
-          transform transition-transform duration-300 ease-smooth
-          lg:sticky lg:translate-x-0
-          ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+          transform transition-all duration-300 ease-smooth
+          lg:sticky lg:top-0
+          ${isOpen 
+            ? 'translate-x-0 w-[85vw] sm:w-[400px] lg:w-[320px] lg:translate-x-0 opacity-100' 
+            : 'translate-x-full w-[85vw] sm:w-[400px] lg:translate-x-0 lg:w-0 lg:opacity-0 lg:border-l-0 lg:overflow-hidden'
+          }
         `}
       >
         {/* Mobile Close Button */}

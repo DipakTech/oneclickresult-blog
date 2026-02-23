@@ -41,8 +41,8 @@ export default function ArticleHeader({
             className={`w-full h-full bg-gradient-to-br ${gradient} blur-md scale-105`}
           />
         )}
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/60" />
+        {/* Dark Overlay for better text contrast in light themes */}
+        <div className="absolute inset-0 bg-black/80" />
       </div>
 
       {/* Content Layer */}

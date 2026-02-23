@@ -59,6 +59,29 @@ export default function ArticleContent({ slug }: { slug: string }) {
     }, [document?.content]);
 
 
+    const handleShare = async () => {
+        if (!document) return;
+        
+        const shareData = {
+            title: document.title,
+            text: document.metaDescription || `Check out this article: ${document.title}`,
+            url: window.location.href, // Get the current active URL
+        };
+
+        try {
+            if (navigator.share && navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+            } else {
+                // Fallback to copying to clipboard
+                await navigator.clipboard.writeText(window.location.href);
+                alert("URL copied to clipboard!");
+            }
+        } catch (err) {
+            console.error("Error sharing:", err);
+            // Ignore AbortError when user closes share sheet
+        }
+    };
+
     if (document === undefined) {
         return <div className="h-screen bg-bg" />; 
     }
@@ -100,12 +123,12 @@ export default function ArticleContent({ slug }: { slug: string }) {
                 </Link>
                 <div className="flex items-center gap-4">
                      <ThemeToggle />
-                     {/* Placeholder for Share/Bookmark */}
-                     <button className="p-2 text-text-tertiary hover:text-text-primary hover:bg-black/5 rounded-full transition-all">
+                     <button 
+                         onClick={handleShare}
+                         title="Share Article"
+                         className="p-2 text-text-tertiary hover:text-text-primary hover:bg-black/5 rounded-full transition-all"
+                     >
                         <Share2 className="w-4 h-4" />
-                     </button>
-                     <button className="p-2 text-text-tertiary hover:text-text-primary hover:bg-black/5 rounded-full transition-all">
-                        <Bookmark className="w-4 h-4" />
                      </button>
                 </div>
             </nav>

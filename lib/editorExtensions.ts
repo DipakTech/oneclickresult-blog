@@ -24,6 +24,7 @@ import { Dropcursor } from "@tiptap/extension-dropcursor";
 import { Gapcursor } from "@tiptap/extension-gapcursor";
 import { common, createLowlight } from "lowlight";
 import { Extension } from "@tiptap/core";
+import { Markdown } from "tiptap-markdown";
 
 const lowlight = createLowlight(common);
 
@@ -144,6 +145,7 @@ export function getEditorExtensions() {
     }),
 
     // Utilities
+    Markdown,
     CharacterCount,
     Focus.configure({
       className: "has-focus",
