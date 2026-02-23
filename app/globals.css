@@ -4,6 +4,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'highlight.js/styles/atom-one-dark.css';
+
 /* ================================================
    DESIGN SYSTEM — Light Theme (Default)
    ================================================ */

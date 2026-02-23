@@ -145,7 +145,11 @@ export function getEditorExtensions() {
     }),
 
     // Utilities
-    Markdown,
+    Markdown.configure({
+      html: false,
+      transformPastedText: true,
+      transformCopiedText: false,
+    }),
     CharacterCount,
     Focus.configure({
       className: "has-focus",

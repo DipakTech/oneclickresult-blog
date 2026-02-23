@@ -8,6 +8,10 @@ import { getEditorExtensions } from "../lib/editorExtensions";
 import { useImageUpload } from "../hooks/useImageUpload";
 import { useState } from "react";
 import AdvancedToolbar from "./Editor/AdvancedToolbar";
+import markdownit from "markdown-it";
+import { DOMParser as ProseMirrorDOMParser } from "@tiptap/pm/model";
+
+const md = markdownit({ html: true, linkify: true, typographer: true });
 
 interface EditorProps {
   documentId: Id<"documents">;
@@ -43,6 +47,45 @@ export default function Editor({ documentId, initialContent, editable = true, on
     editorProps: {
       attributes: {
         class: "focus:outline-none max-w-full min-h-[300px] prose prose-lg dark:prose-invert max-w-none",
+      },
+      handlePaste: (view, event) => {
+        const plainText = event.clipboardData?.getData("text/plain");
+        if (!plainText) return false;
+
+        // Detect if the plain text looks like markdown
+        const markdownPatterns = [
+          /^#{1,6}\s/m,          // headings
+          /^\s*[-*+]\s/m,        // unordered lists
+          /^\s*\d+\.\s/m,        // ordered lists
+          /```/,                 // code fences
+          /\[.+?\]\(.+?\)/,      // links
+          /^\s*>/m,              // blockquotes
+          /\*\*.+?\*\*/,         // bold
+          /^---$/m,              // horizontal rules
+        ];
+
+        const matchCount = markdownPatterns.filter(p => p.test(plainText)).length;
+
+        if (matchCount >= 2) {
+          event.preventDefault();
+
+          // Convert markdown to HTML synchronously
+          const html = md.render(plainText);
+
+          // Parse the HTML into ProseMirror nodes using ProseMirror's DOMParser
+          const tempDiv = globalThis.document.createElement("div");
+          tempDiv.innerHTML = html;
+          const parser = ProseMirrorDOMParser.fromSchema(view.state.schema);
+          const slice = parser.parseSlice(tempDiv);
+
+          // Insert the parsed slice at the current cursor position
+          const tr = view.state.tr.replaceSelection(slice);
+          view.dispatch(tr);
+
+          return true;
+        }
+
+        return false;
       },
       handleDrop: (view, event, slice, moved) => {
         if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {

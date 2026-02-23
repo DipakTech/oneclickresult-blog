@@ -1,4 +1,4 @@
-import { ArrowLeft, Save, Cloud, Loader2, Share2, MoreHorizontal, PanelRight } from "lucide-react";
+import { ArrowLeft, Save, Cloud, Loader2, Share2, MoreHorizontal, PanelRight, Eye } from "lucide-react";
 import Link from "next/link";
 import { Id } from "../../convex/_generated/dataModel";
 
@@ -67,6 +67,15 @@ export default function EditorHeader({
             >
                 <PanelRight className="w-5 h-5" />
             </button>
+
+            <Link
+                href={`/documents/${documentId}/view`}
+                target="_blank"
+                title="Preview Article"
+                className="p-2 text-text-secondary hover:text-text-primary hover:bg-bg-secondary rounded-lg transition-colors"
+            >
+                <Eye className="w-5 h-5" />
+            </Link>
 
             <button className="p-2 text-text-secondary hover:text-text-primary hover:bg-bg-secondary rounded-lg transition-colors">
                 <Share2 className="w-5 h-5" />
