@@ -52,6 +52,20 @@ export default function Editor({ documentId, initialContent, editable = true, on
         const plainText = event.clipboardData?.getData("text/plain");
         if (!plainText) return false;
 
+        const textStr = plainText.trim();
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+        
+        if (youtubeRegex.test(textStr)) {
+          const { schema, tr } = view.state;
+          const youtubeType = schema.nodes.youtube;
+          if (youtubeType) {
+            event.preventDefault();
+            const node = youtubeType.create({ src: textStr });
+            view.dispatch(tr.replaceSelectionWith(node));
+            return true;
+          }
+        }
+
         // Detect if the plain text looks like markdown
         const markdownPatterns = [
           /^#{1,6}\s/m,          // headings

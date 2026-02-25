@@ -25,6 +25,7 @@ import { Gapcursor } from "@tiptap/extension-gapcursor";
 import { common, createLowlight } from "lowlight";
 import { Extension } from "@tiptap/core";
 import { Markdown } from "tiptap-markdown";
+import Youtube from "@tiptap/extension-youtube";
 
 const lowlight = createLowlight(common);
 
@@ -141,6 +142,16 @@ export function getEditorExtensions() {
       nested: true,
       HTMLAttributes: {
         class: "flex items-start gap-2",
+      },
+    }),
+
+    // Media
+    Youtube.configure({
+      inline: false,
+      width: 640,
+      height: 360,
+      HTMLAttributes: {
+        class: "w-full aspect-video rounded-lg shadow-sm border border-border my-4",
       },
     }),
 

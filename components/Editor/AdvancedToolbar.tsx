@@ -40,6 +40,7 @@ import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
   ArrowUpDown,
+  Youtube,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { FONT_FAMILIES, COLOR_PALETTE, LINE_HEIGHTS } from "../../lib/editorExtensions";
@@ -53,8 +54,10 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const toolbarRef = useRef<HTMLDivElement>(null);
   const linkInputRef = useRef<HTMLInputElement>(null);
+  const youtubeInputRef = useRef<HTMLInputElement>(null);
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -75,7 +78,7 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
     };
   }, [activeDropdown]);
 
-  // Focus link input when dropdown opens
+  // Focus link or youtube input when dropdown opens
   useEffect(() => {
     if (activeDropdown === "link" && linkInputRef.current) {
       linkInputRef.current.focus();
@@ -86,7 +89,11 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
         setLinkUrl("");
       }
     }
-  }, [activeDropdown]);
+    if (activeDropdown === "youtube" && youtubeInputRef.current) {
+      youtubeInputRef.current.focus();
+      setYoutubeUrl(""); // Reset whenever opened
+    }
+  }, [activeDropdown, editor]);
 
   if (!editor) {
     return null;
@@ -154,6 +161,16 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
     editor.chain().focus().unsetLink().run();
     setActiveDropdown(null);
     setLinkUrl("");
+  };
+
+  const handleSetYoutube = () => {
+    if (youtubeUrl) {
+      editor.commands.setYoutubeVideo({
+        src: youtubeUrl,
+      });
+    }
+    setActiveDropdown(null);
+    setYoutubeUrl("");
   };
 
   // Helper to render fixed dropdown content
@@ -567,6 +584,40 @@ export default function EditorToolbar({ editor, onImageUpload }: EditorToolbarPr
           >
             <ImagePlus className="w-4 h-4" />
           </ToolbarButton>
+
+          {/* YouTube */}
+          <ToolbarButton
+            onClick={(e) => toggleDropdown("youtube", e)}
+            isActive={activeDropdown === "youtube"}
+            title="Insert YouTube Video"
+          >
+            <Youtube className="w-4 h-4" />
+          </ToolbarButton>
+          {activeDropdown === "youtube" && (
+            <DropdownContent className="w-72 p-3">
+              <label className="text-xs font-medium text-text-secondary mb-1.5 block">YouTube Video URL</label>
+              <div className="flex gap-1.5">
+                <input
+                  ref={youtubeInputRef}
+                  type="url"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSetYoutube();
+                    if (e.key === "Escape") setActiveDropdown(null);
+                  }}
+                  placeholder="https://youtube.com/watch?v=..."
+                  className="flex-1 px-2.5 py-1.5 bg-bg border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  onClick={handleSetYoutube}
+                  className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-md hover:bg-primary-hover transition-colors"
+                >
+                  Insert
+                </button>
+              </div>
+            </DropdownContent>
+          )}
 
           {/* Quote */}
           <ToolbarButton
