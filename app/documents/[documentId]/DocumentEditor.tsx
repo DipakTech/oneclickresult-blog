@@ -20,6 +20,7 @@ interface DocumentEditorProps {
 export default function DocumentEditor({ documentId }: DocumentEditorProps) {
     const document = useQuery(api.documents.getDocument, { id: documentId });
     const updateDocument = useMutation(api.documents.updateDocument);
+    const deleteDocument = useMutation(api.documents.deleteDocument);
     const { uploadImage } = useImageUpload();
     
     // Editor instance state
@@ -57,6 +58,28 @@ export default function DocumentEditor({ documentId }: DocumentEditorProps) {
         }, 500);
         setTimer(newTimer);
     };
+
+    // Keep track of latest document state for unmount cleanup
+    const latestDocRef = useRef(document);
+    useEffect(() => {
+        latestDocRef.current = document;
+    }, [document]);
+
+    // Auto-discard empty document on unmount
+    useEffect(() => {
+        return () => {
+            const doc = latestDocRef.current;
+            if (doc) {
+                const isTitleEmpty = !doc.title || doc.title.trim() === "" || doc.title === "Untitled Article";
+                const isContentEmpty = !doc.content || doc.content.trim() === "" || doc.content === "<p></p>";
+                
+                if (isTitleEmpty && isContentEmpty) {
+                    console.log("Discarding empty document:", documentId);
+                    deleteDocument({ id: documentId }).catch(console.error);
+                }
+            }
+        };
+    }, [documentId, deleteDocument]);
 
     const handlePublishToggle = async () => {
         if (!document) return;

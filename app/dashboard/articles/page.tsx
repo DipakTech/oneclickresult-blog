@@ -41,6 +41,7 @@ function ArticlesContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasAttemptedCreateRef = useRef(false);
 
   useEffect(() => {
     const filterParam = searchParams.get("filter");
@@ -98,7 +99,7 @@ function ArticlesContent() {
     [status, loadMore],
   );
 
-  const handleCreateDocument = async () => {
+  const handleCreateDocument = useCallback(async () => {
     try {
       const documentId = await createDocument({
         title: "Untitled Article",
@@ -109,7 +110,16 @@ function ArticlesContent() {
     } catch (error) {
       console.error("Failed to create document:", error);
     }
-  };
+  }, [createDocument, session?.user?.name, session?.user?.image, router]);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "true" && !hasAttemptedCreateRef.current) {
+      hasAttemptedCreateRef.current = true;
+      handleCreateDocument();
+      // Remove 'new' from URL to prevent re-triggering on refresh
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [searchParams, handleCreateDocument]);
 
   const handleDeleteClick = (id: Id<"documents">) => {
     setOpenMenuId(null);

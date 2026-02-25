@@ -4,6 +4,7 @@ import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
 import NextAuthSessionProvider from "@/components/SessionProvider";
 import ThemeProvider from "@/components/ThemeProvider";
+import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -113,7 +114,10 @@ export default function RootLayout({
         <JsonLd data={jsonLdData} />
         <NextAuthSessionProvider>
           <ConvexClientProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+              <GlobalShortcuts />
+              {children}
+            </ThemeProvider>
           </ConvexClientProvider>
         </NextAuthSessionProvider>
       </body>
