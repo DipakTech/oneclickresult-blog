@@ -8,7 +8,7 @@ import BlogCard from "../../../components/BlogCard"; // Reuse for related
 import dynamic from "next/dynamic";
 import { ArrowLeft, User, Share2, Bookmark } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 
 import ThemeToggle from "../../../components/ThemeToggle";
 
@@ -40,6 +40,7 @@ export default function ArticleContent({ slug }: { slug: string }) {
     const document = useQuery(api.documents.getArticleBySlug, { slug });
     const allDocs = useQuery(api.documents.getPublishedDocuments, {}) ?? [];
     const incrementViewCount = useMutation(api.documents.incrementViewCount);
+    const contentRef = useRef<HTMLDivElement>(null);
 
     // Track view count
     useEffect(() => {
@@ -47,6 +48,79 @@ export default function ArticleContent({ slug }: { slug: string }) {
             incrementViewCount({ id: document._id }).catch((e) => console.error(e));
         }
     }, [document?._id]);
+
+    // Inject copy buttons into code blocks
+    const addCopyButton = useCallback((pre: HTMLPreElement) => {
+        if (pre.querySelector('.code-copy-btn')) return;
+
+        pre.style.position = 'relative';
+
+        const copyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+        const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+        const btn = window.document.createElement('button');
+        btn.className = 'code-copy-btn';
+        btn.setAttribute('aria-label', 'Copy code');
+        btn.setAttribute('title', 'Copy code');
+        btn.innerHTML = copyIcon;
+
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const code = pre.querySelector('code');
+            const text = code?.textContent || pre.textContent || '';
+            try {
+                await navigator.clipboard.writeText(text);
+                btn.innerHTML = checkIcon;
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerHTML = copyIcon;
+                    btn.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        });
+
+        pre.appendChild(btn);
+    }, []);
+
+    useEffect(() => {
+        const container = contentRef.current;
+        if (!container) return;
+
+        // Process any existing pre blocks
+        const processExistingBlocks = () => {
+            container.querySelectorAll('pre').forEach((pre) => {
+                addCopyButton(pre as HTMLPreElement);
+            });
+        };
+
+        // Initial scan
+        processExistingBlocks();
+
+        // Watch for dynamically added pre blocks (TipTap renders async)
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                // Check added nodes
+                mutation.addedNodes.forEach((node) => {
+                    if (node instanceof HTMLElement) {
+                        if (node.tagName === 'PRE') {
+                            addCopyButton(node as HTMLPreElement);
+                        }
+                        // Also check children of added nodes
+                        node.querySelectorAll('pre').forEach((pre) => {
+                            addCopyButton(pre as HTMLPreElement);
+                        });
+                    }
+                });
+            }
+        });
+
+        observer.observe(container, { childList: true, subtree: true });
+
+        return () => observer.disconnect();
+    }, [document?.content, addCopyButton]);
 
     // Process content for TOC (memoized)
     const { processedContent, tocItems } = useMemo(() => {
@@ -153,7 +227,7 @@ export default function ArticleContent({ slug }: { slug: string }) {
                 </div>
 
                 {/* Center: Content */}
-                <div className="col-span-1 lg:col-span-8 max-w-[720px] mx-auto w-full">
+                <div ref={contentRef} className="col-span-1 lg:col-span-8 max-w-[720px] mx-auto w-full">
                     <div className="
                         prose prose-lg max-w-none dark:prose-invert
                         text-[20px] leading-[1.8] text-text-primary
