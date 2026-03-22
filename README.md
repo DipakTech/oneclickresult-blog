@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blog Platform & File Storage
 
-## Getting Started
+A modern, full-stack blog platform and file storage application built with Next.js, Convex, and TailwindCSS. It features a rich text editor powered by Tiptap, content management features, and robust file storage capabilities.
 
-First, run the development server:
+## 🚀 Features
+
+- **Rich Text Editor**: Comprehensive editor built with Tiptap supporting markdown, images, tables, YouTube embeds, syntax highlighting, and more.
+- **Content Management**: Create, edit, publish, and manage blog posts with full SEO metadata, categorization, reading time estimation, and analytics tracking.
+- **File Storage**: Upload and manage files (images, PDFs, CSVs) with shareable links, integrated with Convex storage.
+- **Authentication**: Secure user authentication powered by NextAuth.
+- **Modern UI/UX**: Responsive design with TailwindCSS, Lucide icons, Dark/Light theme toggling, and smooth skeleton loading states.
+- **Real-time Database**: Powered by Convex for instant syncing and fast, reactive data mutations.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Frontend**: React 18
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Database & Backend**: [Convex](https://www.convex.dev/)
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/)
+- **Rich Text Editor**: [Tiptap](https://tiptap.dev/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Deployment**: Docker ready
+
+## 📦 Getting Started
+
+### Prerequisites
+
+Ensure you have Node.js and npm (or yarn/pnpm) installed. You'll also need a Convex project and authentication providers configured.
+
+### Installation
+
+1. Clone the repository and navigate to the project directory:
+   ```bash
+   cd blog-platform
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   Copy the example environment file and configure your credentials.
+   ```bash
+   cp .env.example .env.local
+   ```
+   **Required Environment Variables (see `.env.example`):**
+   - Convex deployment URL & keys
+   - NextAuth secret and provider credentials (e.g., GitHub, Google)
+
+4. Initialize Convex:
+   ```bash
+   npx convex dev
+   ```
+
+5. Run the development server:
+   ```bash
+   npm run dev
+   ```
+   *Note: The app runs on port `3001` by default.*
+
+6. Open [http://localhost:3001](http://localhost:3001) in your browser.
+
+## 🐳 Docker Deployment
+
+The application includes a `Dockerfile` and `docker-compose.yml` for easy containerized deployment.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Build and run with Docker Compose
+docker-compose up -d --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app will be available on port `3001`. Ensure your production environment variables are properly set in the Docker environment.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📝 License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+© OneClickResult. All rights reserved.
