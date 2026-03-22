@@ -8,7 +8,7 @@ services:
     container_name: file-storage
     restart: always
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
     # Add other environment variables here or use env_file
