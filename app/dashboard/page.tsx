@@ -97,6 +97,8 @@ function HomeContent() {
     return "Good evening";
   };
 
+  // this is return code
+
   return (
     <div className="flex h-screen bg-bg overflow-hidden">
       <Sidebar
