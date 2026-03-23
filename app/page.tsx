@@ -95,11 +95,9 @@ export default function BlogHomePage() {
               Dipak.
             </div>
             <div className="flex items-center gap-4">
-               {/* Other nav items could go here */}
+            
                <ThemeToggle />
-               {/* <a href="/dashboard" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                  Dashboard
-               </a> */}
+            
             </div>
           </nav>
 
