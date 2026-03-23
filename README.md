@@ -75,4 +75,4 @@ The app will be available on port `3001`. Ensure your production environment var
 
 ## 📝 License
 
-© OneClickResult. All rights reserved.
+© OneClickResult blog. All rights reserved.
